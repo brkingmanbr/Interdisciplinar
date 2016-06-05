@@ -8,7 +8,7 @@ class Controle():
 	                  'autocommit':True}
 	    self.banco = bd.connect(**self.parametros)
 	    self.c = self.banco.cursor()
-	    
+	    self.c.execute('USE SIS;')
 
 	def primeiro_dia_do_mes(self, mes, ano = '2016', dia = '1'):
 	    self.c.execute('''
@@ -28,11 +28,21 @@ class Controle():
 		self.c.execute('SELECT NOW();')
 		ano = int(str(self.c.fetchone()[0])[:4])
 		return ano
-		
+	def lista_de_professores(self):
+		self.c.execute('SELECT matricula, nome_prof FROM Professor ORDER BY matricula;')
+		profesores = self.c.fetchall()
+		return profesores
+
+	def lista_de_turmas(self):
+		self.c.execute('SELECT nome_turma, turno FROM Turma ORDER BY nome_turma;')
+		turmas = self.c.fetchall()
+		return turmas
+
 	def close(self):
 		self.banco.close()
 if __name__ == '__main__':
-	x = Controle()
-	print(x.ano_atual())
-	print(x.quant_dias_do_mes(mes='06'))
-	x.close()
+	Cont = Controle()
+
+	print(Cont.lista_de_turmas())
+
+	Cont.close()
