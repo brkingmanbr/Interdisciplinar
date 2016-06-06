@@ -9,16 +9,18 @@ class Visao(Frame):
 		Frame.__init__(self, master)
 		self.master = master
 		self.master.Bd = Banco()
-		#self.start_login()
+		self.start_login()
 		#self.cronograma()
 		#self.start_menu()
 		#self.refresh()
 		#self.professor()
 		#self.cronograma()
 		#self.turma()
-		self.homepage()
+		#self.homepage()
 
 	def homepage(self):
+		self.master.resizable(False,False)
+		self.refresh()
 		self.master.title('Homepage - Seja Bem Vindo')
 		self.refresh()
 		self.Home = Frame(self.master).grid()
@@ -27,11 +29,13 @@ class Visao(Frame):
 		img = Label(self.Home, image=render)
 		img.image = render
 		img.grid(row=0, column=0, columnspan=2)
+		self.master.resizable(False,False)	
 
 	def start_menu(self):
 		self.menu = Menu(self.master)
 		self.master.config(menu=self.menu)
-		self.file = Menu(self.menu)    
+		self.file = Menu(self.menu)
+		self.menu.add_cascade(label="Home", command= self.homepage)
 		self.menu.add_cascade(label="Editar", menu=self.file)
 		self.file.add_command(label="Editar Professores", command=self.professor) #deve abrir o CRUD de professor
 		self.file.add_command(label="Editar Turmas", command=self.turma) #deve abrir o CRUD de turmas
@@ -41,7 +45,6 @@ class Visao(Frame):
 
 	def start_login(self):
 		self.master.title("Tela de Login")
-		self.master.resizable(False,False)
 		self.grid()
 		load = Image.open('aang.png')
 		render = ImageTk.PhotoImage(load)
@@ -50,29 +53,20 @@ class Visao(Frame):
 		img.grid(row=0, column=0, columnspan=2)
 
 		UsuarioL = Label(self, text='Username: ', anchor='w').grid(row=1, column=0, sticky='we')
-		user = StringVar()
-		UsuarioE = Entry(self).grid(row=1, column=1, sticky='we')
+		self.user = StringVar()
+		UsuarioE = Entry(self, textvariable = self.user).grid(row=1, column=1, sticky='we')
 		SenhaL = Label(self, text='Password: ', anchor='w').grid(row=2, column=0, sticky='we')
-		senha = StringVar()
-		SenhaE = Entry(self).grid(row=2, column=1, sticky='we')
-		Login = Button(self, text='Login', command=lambda: self.verifica_login(user.get(), senha.get())).grid(row=3, columnspan=2, sticky='we')
+		self.senha = StringVar()
+		SenhaE = Entry(self, textvariable = self.senha).grid(row=2, column=1, sticky='we')
+		Login = Button(self, text='Login', command= self.verifica_login).grid(row=3, columnspan=2, sticky='we')
 		self.master.title("Tela de Login")
-	
-	def ignorar_tictac(self):
-		self.agora = strftime('%H:%M:%S')
-		if self.agora != relogio['text']:
-			relogio['text'] = agora
-		relogio.after(100, tictac)
-		
-		tictac()
-		self.relogio = tkinter.Label()
-		relogio['font'] = 'Helvetica 20 bold'
-		relogio['text'] = strftime('%H:%M:%S')
+		self.master.resizable(False,False)
 
-
-	def verifica_login(self, login, senha):
-		print('isso tem que estar no controle'+login+senha)
-		'realizar verificação de login'
+	def verifica_login(self):
+		if self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == True:
+			self.homepage()
+		else:
+			self.master.title("Senha ou Login incorretos tente novamente")
 
 	def cronograma(self, linha = 0, coluna = 0):
 		self.refresh()
@@ -210,8 +204,7 @@ class Visao(Frame):
 			nomet, turno = turma
 			Label(self.Turma, text='Nome: %s'%nomet).grid(row=linha, column=0, sticky='WE')
 			Label(self.Turma, text='Turno: %s'%turno).grid(row=linha, column=1, sticky='WE')
-			linha+=1		
-
+			linha+=1
 if __name__ == '__main__':
 	JP = Tk()
 	JP.grid()

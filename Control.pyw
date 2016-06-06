@@ -1,6 +1,6 @@
 import pymysql as bd
 
-class Controle():
+class Banco():
 	def __init__(self):
 	    self.parametros = {'user':'root',#user.get(),
 	                  'host':'localhost',#host.get(),
@@ -32,17 +32,30 @@ class Controle():
 		self.c.execute('SELECT matricula, nome_prof FROM Professor ORDER BY matricula;')
 		profesores = self.c.fetchall()
 		return profesores
-
 	def lista_de_turmas(self):
 		self.c.execute('SELECT nome_turma, turno FROM Turma ORDER BY nome_turma;')
 		turmas = self.c.fetchall()
 		return turmas
+	def verifica_login(self, login, senha):
+		self.c.execute("SELECT senha FROM Coordenador where login = '%s';"%login)
+		Senha = self.c.fetchone()[0]
+		if senha == Senha:
+			return True
+		else:
+			return False
+
+
 
 	def close(self):
 		self.banco.close()
+
+#class Controle():
+	#def __init__(self):
+	#	pass
+
 if __name__ == '__main__':
-	Cont = Controle()
+	BD = Banco()
 
-	print(Cont.lista_de_turmas())
+	print(BD.verifica_login(login = 'teste', senha='123'))
 
-	Cont.close()
+	BD.close()

@@ -2,16 +2,30 @@ drop database SIS;
 create database SIS;
 use SIS;
 
-CREATE TABLE Professor (
-    matricula INT PRIMARY KEY,
-    nome_prof VARCHAR(40)
-);
 CREATE TABLE Turno (
     turno VARCHAR(30) PRIMARY KEY
 );
 insert into turno values('Matutino');
 insert into turno values('Vespertino');
 insert into turno values('Noturno');
+
+CREATE TABLE Professor (
+    id_prof INT AUTO_INCREMENT PRIMARY KEY,
+    matricula INT,
+    nome_prof VARCHAR(40)
+);
+
+SELECT matricula, nome_prof FROM Professor ORDER BY matricula;
+insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá');
+
+
+CREATE TABLE Professor_Turno (
+    id_professor INT,
+    turno_turno VARCHAR(30),
+    FOREIGN KEY (id_professor)
+        REFERENCES Professor (id_prof)
+);
+
 
 CREATE TABLE Horario (
     horario VARCHAR(13) PRIMARY KEY,
@@ -23,6 +37,14 @@ insert into Horario values('07:30 - 08:30','Matutino');
 insert into Horario values('08:30 - 09:30','Matutino');
 insert into Horario values('09:30 - 10:30','Matutino');
 insert into Horario values('10:30 - 11:30','Matutino');
+insert into Horario values('13:00 - 14:00','Vespertino');
+insert into Horario values('14:00 - 15:00','Vespertino');
+insert into Horario values('15:00 - 16:00','Vespertino');
+insert into Horario values('16:00 - 17:00','Vespertino');
+insert into Horario values('18:00 - 19:00','Noturno');
+insert into Horario values('19:00 - 20:00','Noturno');
+insert into Horario values('20:00 - 21:00','Noturno');
+insert into Horario values('21:00 - 22:00','Noturno');
 
 CREATE TABLE Turma (
     nome_turma VARCHAR(10) PRIMARY KEY,
@@ -30,19 +52,33 @@ CREATE TABLE Turma (
     FOREIGN KEY (turno)
         REFERENCES Turno (turno)
 );
-CREATE TABLE Coordenador(
-    id_coor VARCHAR(30) PRIMARY KEY,
+insert into Turma values('TEC50419','Matutino');
+insert into Turma values('TEC50420','Matutino');
+insert into Turma values('TEC50421','Matutino');
+insert into Turma values('TEC50411','Matutino');
+insert into Turma values('TEC50412','Matutino');
+insert into Turma values('TEC50413','Matutino');
+insert into Turma values('TEC50414','Matutino');
+insert into Turma values('TEC50415','Matutino');
+SELECT nome_turma, turno FROM Turma ORDER BY nome_turma;
+
+CREATE TABLE Coordenador (
+    id_coor INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(40),
     login VARCHAR(30),
     senha VARCHAR(30)
 );
+insert into Coordenador(nome, login, senha) values('Nome de teste', 'teste', '123');
+
 CREATE TABLE Cronograma (
-    mat_professor INT,
+    id_professor INT,
     data_reserva DATE,
     horario VARCHAR(13),
-    id_coordenador VARCHAR(13),
-    FOREIGN KEY (mat_professor)
-        REFERENCES professor (matricula),
-    FOREIGN KEY (id_coordenador)
-        REFERENCES Coordenador (id_coor)
-);ba
+    turma VARCHAR(30),
+    FOREIGN KEY (horario)
+        REFERENCES Horario (horario),
+    FOREIGN KEY (id_professor)
+        REFERENCES professor (id_prof),
+    FOREIGN KEY (turma)
+        REFERENCES Turma (nome_turma)
+);
