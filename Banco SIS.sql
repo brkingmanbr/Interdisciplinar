@@ -14,9 +14,13 @@ CREATE TABLE Professor (
     matricula INT,
     nome_prof VARCHAR(40)
 );
-
+SELECT nome_prof FROM Professor;
 SELECT matricula, nome_prof FROM Professor ORDER BY matricula;
-insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá');
+delete from Professor where nome_prof = 'Rasta de Shambalá';
+insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá 1');
+insert into Professor(matricula, nome_prof) values(1234567, 'Rasta de Shambalá 2');
+insert into Professor(matricula, nome_prof) values(12345678, 'Rasta de Shambalá 3');
+insert into Professor(matricula, nome_prof) values(123456789, 'Rasta de Shambalá 4');
 
 
 CREATE TABLE Professor_Turno (
@@ -25,7 +29,6 @@ CREATE TABLE Professor_Turno (
     FOREIGN KEY (id_professor)
         REFERENCES Professor (id_prof)
 );
-
 
 CREATE TABLE Horario (
     horario VARCHAR(13) PRIMARY KEY,
@@ -75,10 +78,18 @@ CREATE TABLE Cronograma (
     data_reserva DATE,
     horario VARCHAR(13),
     turma VARCHAR(30),
-    FOREIGN KEY (horario)
-        REFERENCES Horario (horario),
+    id_coordenador INT,
     FOREIGN KEY (id_professor)
         REFERENCES professor (id_prof),
+    FOREIGN KEY (horario)
+        REFERENCES Horario (horario),
     FOREIGN KEY (turma)
-        REFERENCES Turma (nome_turma)
+        REFERENCES Turma (nome_turma),
+    FOREIGN KEY (id_coordenador)
+        REFERENCES Coordenador (id_coor)
 );
+
+insert into Cronograma values(1, '20160806', '07:30 - 08:30', 'TEC50419', 1);
+insert into Cronograma values(2, '20160806', '08:30 - 09:30', 'TEC50419', 1);
+insert into Cronograma values(3, '20160806', '09:30 - 10:30', 'TEC50419', 1);
+insert into Cronograma values(4, '20160806', '10:30 - 11:30', 'TEC50419', 1);
