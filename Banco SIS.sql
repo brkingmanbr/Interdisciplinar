@@ -12,8 +12,12 @@ insert into turno values('Noturno');
 CREATE TABLE Professor (
     id_prof INT AUTO_INCREMENT PRIMARY KEY,
     matricula INT,
-    nome_prof VARCHAR(40)
+    nome_prof VARCHAR(40),
+    disciplina VARCHAR(40)
 );
+
+SELECT id_prof FROM Professor WHERE nome_prof = 'Rasta de Shambalá 1';
+
 SELECT nome_prof FROM Professor;
 SELECT matricula, nome_prof FROM Professor ORDER BY matricula;
 delete from Professor where nome_prof = 'Rasta de Shambalá';
@@ -21,7 +25,7 @@ insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá 1
 insert into Professor(matricula, nome_prof) values(1234567, 'Rasta de Shambalá 2');
 insert into Professor(matricula, nome_prof) values(12345678, 'Rasta de Shambalá 3');
 insert into Professor(matricula, nome_prof) values(123456789, 'Rasta de Shambalá 4');
-
+SELECT id_professor FROM Professor where nome_prof = 'Rasta de Shambalá 1';
 
 CREATE TABLE Professor_Turno (
     id_professor INT,
@@ -29,6 +33,8 @@ CREATE TABLE Professor_Turno (
     FOREIGN KEY (id_professor)
         REFERENCES Professor (id_prof)
 );
+
+
 
 CREATE TABLE Horario (
     horario VARCHAR(13) PRIMARY KEY,
@@ -48,6 +54,8 @@ insert into Horario values('18:00 - 19:00','Noturno');
 insert into Horario values('19:00 - 20:00','Noturno');
 insert into Horario values('20:00 - 21:00','Noturno');
 insert into Horario values('21:00 - 22:00','Noturno');
+
+select horario from Horario order by(horario);
 
 CREATE TABLE Turma (
     nome_turma VARCHAR(10) PRIMARY KEY,
@@ -88,8 +96,13 @@ CREATE TABLE Cronograma (
     FOREIGN KEY (id_coordenador)
         REFERENCES Coordenador (id_coor)
 );
+use sis;
+truncate Cronograma;
+insert into Cronograma values(1, '20160609', '07:30 - 08:30', 'TEC50419', 1);
+insert into Cronograma values(1, '20160609', '08:30 - 09:30', 'TEC50419', 1);
+insert into Cronograma values(1, '20160609', '09:30 - 10:30', 'TEC50419', 1);
+insert into Cronograma values(1, '20160609', '10:30 - 11:30', 'TEC50419', 1);
 
-insert into Cronograma values(1, '20160806', '07:30 - 08:30', 'TEC50419', 1);
-insert into Cronograma values(2, '20160806', '08:30 - 09:30', 'TEC50419', 1);
-insert into Cronograma values(3, '20160806', '09:30 - 10:30', 'TEC50419', 1);
-insert into Cronograma values(4, '20160806', '10:30 - 11:30', 'TEC50419', 1);
+select id_professor from Cronograma where data_reserva = '20160609' and horario = '07:30 - 08:30';
+select * from Cronograma;
+SELECT nome_prof FROM Professor where id_prof = 1;

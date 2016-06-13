@@ -9,20 +9,10 @@ class Visao(Frame):
 		Frame.__init__(self, master)
 		self.master = master
 		self.master.Bd = Banco()
+		self.start_menu()
 		#self.start_login()
-		#self.cronograma()
-		#self.start_menu()
-		#self.gerenciador_de_cronograma()
-		#self.refresh()
-		#self.professor()
-		#self.cronograma()
-		#self.cronograma(tipo='Professor', professor_ou_turma=)
-		#self.cronograma(tipo='Turma', professor_ou_turma='TEC50419')
-		#self.turma()
 		#self.homepage()
-		#self.cronoprofessor()
-		#self.cronoturma()
-
+		self.gerenciador_de_cronograma()
 
 	def homepage(self):
 		self.master.resizable(False,False)
@@ -38,19 +28,22 @@ class Visao(Frame):
 		self.master.resizable(False,False)	
 
 	def start_menu(self):
-		self.menu = Menu(self.master)
-		self.master.config(menu=self.menu)
-		self.editar = Menu(self.menu)
-		self.menu.add_cascade(label="Home", command= self.homepage)
-		self.menu.add_cascade(label="Editar", menu=self.editar)
+		self.master.MENU = Frame(self.master)
+		self.master.MENU.grid()
+		self.BarradeMenu = Menu(self.master.MENU)
+		self.master.config(menu=self.BarradeMenu)
+		self.editar = Menu(self.BarradeMenu)
+		self.BarradeMenu.add_cascade(label="Home", command= self.homepage)
+		self.BarradeMenu.add_cascade(label="Editar", menu=self.editar)
 		self.editar.add_command(label="Editar Professores", command=self.professor) #deve abrir o CRUD de professor
 		self.editar.add_command(label="Editar Turmas", command=self.turma) #deve abrir o CRUD de turmas
-		self.login = Menu(self.menu)
-		self.menu.add_cascade(label="Login", menu=self.login)
-		self.cronograma = Menu(self.menu)		
-		self.menu.add_cascade(label="Cronograma", menu=self.cronograma)
-		self.cronograma.add_command(label="Cronograma de Professor", command=self.cronoprofessor)
-		self.cronograma.add_command(label="Cronograma de Turma", command=self.cronoturma)
+		self.login = Menu(self.BarradeMenu)
+		self.BarradeMenu.add_cascade(label="Login", menu=self.login)
+		self.cronograma_menu = Menu(self.BarradeMenu)		
+		self.BarradeMenu.add_cascade(label="Gerenciar Cronogramas", menu=self.cronograma_menu)
+		self.cronograma_menu.add_command(label="Atribuir Aulas", command=self.gerenciador_de_cronograma)
+		self.cronograma_menu.add_command(label="Cronograma de Professor", command=self.cronoprofessor)
+		self.cronograma_menu.add_command(label="Cronograma de Turma", command=self.cronoturma)
 
 	def start_login(self):
 		self.master.title("Tela de Login")
@@ -84,8 +77,7 @@ class Visao(Frame):
 		Label(self.ParamCronograma, text='Professores: ').grid(row=1, column=0)
 		self.Professor = StringVar()
 		Combobox(self.ParamCronograma, textvariable=self.Professor, state='readonly', values= self.master.Bd.nomes_professores()).grid(row=1, column=1)
-		Button(self.ParamCronograma, text='Gerar Cronograma', command = lambda: self.cronograma(tipo='Professor', professor_turma=self.Professor.get())).grid(row=1, column=3)
-		self.cronograma(tipo='Professor', professor_turma=self.Professor.get())
+		Button(self.ParamCronograma, text='Gerar Cronograma', command = lambda: self.cronograma(tipo='Professor', professor_ou_turma=self.Professor.get())).grid(row=1, column=3)
 
 	def cronoturma(self):
 		self.refresh()
@@ -93,46 +85,91 @@ class Visao(Frame):
 		self.master.ParamCronograma = Frame(self.master)
 		self.master.ParamCronograma.grid()
 		Label(self.master.ParamCronograma, text='Turmas: ').grid(row=1, column=0)
-		self.Turma = StringVar()
-		Combobox(self.master.ParamCronograma, textvariable=self.Turma, state='readonly', values= self.master.Bd.nomes_turmas()).grid(row=1, column=1)
-		Button(self.master.ParamCronograma, text='Gerar Cronograma', command= self.gerador_de_cronoturma).grid(row=1, column=3)
-		#self.gerador_de_cronograma
-	def gerador_de_cronoturma(self):
-		print('gerador', self.Turma.get())
-		self.cronograma(tipo='Professor', professor_ou_turma=self.Turma.get())
+		self.master.TurmaSelecionada = StringVar()
+		Combobox(self.master.ParamCronograma, textvariable=self.master.TurmaSelecionada, state='readonly', values= self.master.Bd.nomes_turmas()).grid(row=1, column=1)
+		Button(self.master.ParamCronograma, text='Gerar Cronograma', command= lambda: self.cronograma(tipo='Turma', professor_ou_turma=self.master.TurmaSelecionada.get())).grid(row=1, column=3)
+	
 	def gerenciador_de_cronograma(self):
 		self.refresh()
 		self.master.title("Gerenciador de Cronogramas")
-		self.master.Gerenciador = Frame(self.master)
-		self.master.Gerenciador.grid()
-		Label(self.master.Gerenciador, text='Professor: ').grid(row=0, column=0)
+		self.Gerenciador = Frame(self.master)
+		self.Gerenciador.grid(row=0)
+		Label(self.Gerenciador, text='Professor: ').grid(row=0, column=0)
 		self.Professor = StringVar()
-		Combobox(self.master.Gerenciador, textvariable=self.Professor, state='readonly', values= self.master.Bd.nomes_professores()).grid(row=0, column=1)
-		Label(self.master.Gerenciador, text='Lecionara na Turma: ').grid(row=1, column=0)
+		Combobox(self.Gerenciador, textvariable=self.Professor, state='readonly', values= self.master.Bd.nomes_professores()).grid(row=0, column=1)
+		Label(self.Gerenciador, text='Lecionara na Turma: ').grid(row=1, column=0)
 		self.Turma = StringVar()
-		Combobox(self.master.Gerenciador, textvariable=self.Turma, state='readonly', values= self.master.Bd.nomes_turmas()).grid(row=1, column=1)
-		Label(self.master.Gerenciador, text='Apartir de: ').grid(row=2, column=0)
+		Combobox(self.Gerenciador, textvariable=self.Turma, state='readonly', values= self.master.Bd.nomes_turmas()).grid(row=1, column=1)
+		Label(self.Gerenciador, text='Apartir de: ').grid(row=2, column=0)
 		self.diaInicial = StringVar()
 		self.mesInicial = StringVar()
 		self.anoInicial = StringVar()
 		dias = ('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31')
 		meses = ('01','02','03','04','05','06','07','08','09','10','11','12')
-		anos = ('2016',)
-		Combobox(self.master.Gerenciador, textvariable=self.diaInicial, state='readonly', values=dias).grid(row=2, column=1)
-		Combobox(self.master.Gerenciador, textvariable=self.mesInicial, state='readonly', values=meses).grid(row=2, column=2)
-		Combobox(self.master.Gerenciador, textvariable=self.anoInicial, state='readonly', values=meses).grid(row=2, column=3)
+		anos = ('2016','2017','2018')
+		Combobox(self.Gerenciador, textvariable=self.diaInicial, state='readonly', values=dias).grid(row=2, column=1)
+		Combobox(self.Gerenciador, textvariable=self.mesInicial, state='readonly', values=meses).grid(row=2, column=2)
+		Combobox(self.Gerenciador, textvariable=self.anoInicial, state='readonly', values=anos).grid(row=2, column=3)
 		self.diaFinal = StringVar()
 		self.mesFinal = StringVar()
 		self.anoFinal = StringVar()
-		Label(self.master.Gerenciador, text=' até ').grid(row=3, column=0)
-		Combobox(self.master.Gerenciador, textvariable=self.diaFinal, state='readonly', values=dias).grid(row=3, column=1)
-		Combobox(self.master.Gerenciador, textvariable=self.mesFinal, state='readonly', values=meses).grid(row=3, column=2)
-		Combobox(self.master.Gerenciador, textvariable=self.anoFinal, state='readonly', values=meses).grid(row=3, column=3)
+		Label(self.Gerenciador, text=' até ').grid(row=3, column=0)
+		Combobox(self.Gerenciador, textvariable=self.diaFinal, state='readonly', values=dias).grid(row=3, column=1)
+		Combobox(self.Gerenciador, textvariable=self.mesFinal, state='readonly', values=meses).grid(row=3, column=2)
+		Combobox(self.Gerenciador, textvariable=self.anoFinal, state='readonly', values=anos).grid(row=3, column=3)
+		self.GerenciadorCalendario = Frame(self.master)
+		self.GerenciadorCalendario.grid(row=10, columnspan=100)
+		Label(self.GerenciadorCalendario, text='Nos seguintes horários: ').grid(row=4, column=0, columnspan=100)
+		Dias_da_semana = ('Segunda','Terça','Quarta','Quinta','Sexta','Sábado')
+		self.v = IntVar()
+		horarios = []
+		Segunda = []; Terça = []; Quarta = []; Quinta = [];	Sexta = [];	Sábado = []
+		self.master.Semana = [Segunda, Terça , Quarta, Quinta, Sexta, Sábado]
+		for dia in self.master.Semana: 
+			for x in range(0,12): 
+				x = StringVar()
+				dia.append(x)
+		y = 0
+		for dias in range(0,12,2):
+			Label(self.GerenciadorCalendario, text=Dias_da_semana[y]+str(dias), anchor='center').grid(row=5, column=dias, columnspan=2, sticky= 'WE')
+			y+=1
+		dia = 0
+		hora = 0
+		for h in range(0,12,2):
+			for l in range(0,12):
+				print(dia,hora)
+				Checkbutton(self.GerenciadorCalendario, text = h, onvalue = str(self.master.Bd.horarios()[l]), variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
+				Label(self.GerenciadorCalendario, text = self.master.Bd.horarios()[l]).grid(row=l+6, column=h+1, sticky= 'WE')
+				hora+=1
+			dia+=1
+			hora=0
+		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(lista_de_checkbox='', professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get())).grid(row=18, column=0, columnspan=100, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Apagar Aulas', command= self.teste).grid(row=19, column=0, columnspan=100, sticky= 'WE')
 		
-		
+	def teste(self):
+		for ele in self.master.Semana:
+			for e in ele:
+				print(e.get())
 
+			# Checkbutton(self.Gerenciador, text = "07:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=6, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "08:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=7, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "09:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=8, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "10:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=9, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "11:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=10, column=dias, sticky= 'WE')
+
+			# Checkbutton(self.Gerenciador, text = "13:00 - 14:00 ", onvalue = 1, offvalue = 0).grid(row=11, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "14:00 - 15:00 ", onvalue = 1, offvalue = 0).grid(row=12, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "15:00 - 16:00 ", onvalue = 1, offvalue = 0).grid(row=13, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "16:00 - 17:00 ", onvalue = 1, offvalue = 0).grid(row=14, column=dias, sticky= 'WE')
+
+			# Checkbutton(self.Gerenciador, text = "18:00 - 19:00 ", onvalue = 1, offvalue = 0).grid(row=15, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "19:00 - 20:00 ", onvalue = 1, offvalue = 0).grid(row=16, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "20:00 - 21:00 ", onvalue = 1, offvalue = 0).grid(row=17, column=dias, sticky= 'WE')
+			# Checkbutton(self.Gerenciador, text = "21:00 - 22:00 ", onvalue = 1, offvalue = 0).grid(row=18, column=dias, sticky= 'WE')			
+
+	
 	def cronograma(self, linha = 0, coluna = 0, tipo='', professor_ou_turma=''):
-		#self.refresh()
+		self.refresh()
 		self.master.title("Cronograma "+professor_ou_turma)
 		self.Calendario = Frame(self.master)
 		self.Calendario.grid(row=linha, column=coluna)
@@ -224,8 +261,8 @@ class Visao(Frame):
 	                	if diaa < 10: diaa = '0'+str(diaa)
 	                	Button(frame, text='Dia: %i'%dia).grid(row=linha, column=coluna, sticky='NSWE')
 	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '07:30 - 08:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+1, column=coluna, sticky='NSWE')
-	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '8:30 - 9:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+2, column=coluna, sticky='NSWE')
-	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '9:30 - 10:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+3, column=coluna, sticky='NSWE')
+	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '08:30 - 09:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+2, column=coluna, sticky='NSWE')
+	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '09:30 - 10:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+3, column=coluna, sticky='NSWE')
 	                	Button(frame, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = '10:30 - 11:30', tipo=tipo, professor_turma= professor_turma)).grid(row=linha+4, column=coluna, sticky='NSWE')
 	                	dia += 1
 	            diaAtual = 1
