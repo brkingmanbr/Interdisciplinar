@@ -25,7 +25,7 @@ insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá 1
 insert into Professor(matricula, nome_prof) values(1234567, 'Rasta de Shambalá 2');
 insert into Professor(matricula, nome_prof) values(12345678, 'Rasta de Shambalá 3');
 insert into Professor(matricula, nome_prof) values(123456789, 'Rasta de Shambalá 4');
-SELECT id_professor FROM Professor where nome_prof = 'Rasta de Shambalá 1';
+SELECT id_prof FROM Professor where nome_prof = 'Rasta de Shambalá 1';
 
 CREATE TABLE Professor_Turno (
     id_professor INT,
@@ -55,7 +55,7 @@ insert into Horario values('19:00 - 20:00','Noturno');
 insert into Horario values('20:00 - 21:00','Noturno');
 insert into Horario values('21:00 - 22:00','Noturno');
 
-select horario from Horario order by(horario);
+SELECT horario FROM Horario ORDER BY (horario);
 
 CREATE TABLE Turma (
     nome_turma VARCHAR(10) PRIMARY KEY,

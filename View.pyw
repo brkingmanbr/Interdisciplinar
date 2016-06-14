@@ -9,7 +9,7 @@ class Visao(Frame):
 		Frame.__init__(self, master)
 		self.master = master
 		self.master.Bd = Banco()
-		self.start_menu()
+		#self.start_menu()
 		#self.start_login()
 		#self.homepage()
 		self.gerenciador_de_cronograma()
@@ -122,12 +122,13 @@ class Visao(Frame):
 		Label(self.GerenciadorCalendario, text='Nos seguintes horários: ').grid(row=4, column=0, columnspan=100)
 		Dias_da_semana = ('Segunda','Terça','Quarta','Quinta','Sexta','Sábado')
 		self.v = IntVar()
-		horarios = []
-		Segunda = []; Terça = []; Quarta = []; Quinta = [];	Sexta = [];	Sábado = []
-		self.master.Semana = [Segunda, Terça , Quarta, Quinta, Sexta, Sábado]
+		
+		#Segunda = []; Terça = []; Quarta = []; Quinta = [];	Sexta = [];	Sábado = []
+		self.master.Semana = [[],[],[],[],[],[]]#[Segunda, Terça , Quarta, Quinta, Sexta, Sábado]
+
 		for dia in self.master.Semana: 
 			for x in range(0,12): 
-				x = StringVar()
+				x = IntVar() ###### StringVar() para mostrar o horário
 				dia.append(x)
 		y = 0
 		for dias in range(0,12,2):
@@ -137,35 +138,22 @@ class Visao(Frame):
 		hora = 0
 		for h in range(0,12,2):
 			for l in range(0,12):
-				print(dia,hora)
-				Checkbutton(self.GerenciadorCalendario, text = h, onvalue = str(self.master.Bd.horarios()[l]), variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
+				
+				#onvalue = str(self.master.Bd.horarios()[l])  para mostrar o horário
+				Checkbutton(self.GerenciadorCalendario, text = h, onvalue = 1, variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
 				Label(self.GerenciadorCalendario, text = self.master.Bd.horarios()[l]).grid(row=l+6, column=h+1, sticky= 'WE')
 				hora+=1
 			dia+=1
 			hora=0
-		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(lista_de_checkbox='', professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get())).grid(row=18, column=0, columnspan=100, sticky= 'WE')
-		Button(self.GerenciadorCalendario, text='Apagar Aulas', command= self.teste).grid(row=19, column=0, columnspan=100, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(lista_de_checkbox=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get())).grid(row=18, column=0, columnspan=100, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Apagar Aulas').grid(row=19, column=0, columnspan=100, sticky= 'WE')
 		
-	def teste(self):
-		for ele in self.master.Semana:
-			for e in ele:
-				print(e.get())
-
-			# Checkbutton(self.Gerenciador, text = "07:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=6, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "08:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=7, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "09:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=8, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "10:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=9, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "11:30 - 08:30 ", onvalue = 1, offvalue = 0).grid(row=10, column=dias, sticky= 'WE')
-
-			# Checkbutton(self.Gerenciador, text = "13:00 - 14:00 ", onvalue = 1, offvalue = 0).grid(row=11, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "14:00 - 15:00 ", onvalue = 1, offvalue = 0).grid(row=12, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "15:00 - 16:00 ", onvalue = 1, offvalue = 0).grid(row=13, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "16:00 - 17:00 ", onvalue = 1, offvalue = 0).grid(row=14, column=dias, sticky= 'WE')
-
-			# Checkbutton(self.Gerenciador, text = "18:00 - 19:00 ", onvalue = 1, offvalue = 0).grid(row=15, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "19:00 - 20:00 ", onvalue = 1, offvalue = 0).grid(row=16, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "20:00 - 21:00 ", onvalue = 1, offvalue = 0).grid(row=17, column=dias, sticky= 'WE')
-			# Checkbutton(self.Gerenciador, text = "21:00 - 22:00 ", onvalue = 1, offvalue = 0).grid(row=18, column=dias, sticky= 'WE')			
+	def semana_em_inteiros(self):
+		lista_de_inteiros = [[],[],[],[],[],[]]
+		for dia in range(0, len(self.master.Semana)):
+			for x in range(0,12): 
+				lista_de_inteiros[dia].append(self.master.Semana[dia][x].get())
+		return lista_de_inteiros
 
 	
 	def cronograma(self, linha = 0, coluna = 0, tipo='', professor_ou_turma=''):
