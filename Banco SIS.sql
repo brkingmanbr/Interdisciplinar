@@ -9,22 +9,34 @@ insert into turno values('Matutino');
 insert into turno values('Vespertino');
 insert into turno values('Noturno');
 
+CREATE TABLE Disciplina (
+    nome_disc VARCHAR(40) PRIMARY KEY
+);
+
+insert into Disciplina values('Disciplina de Teste');
+
 CREATE TABLE Professor (
     id_prof INT AUTO_INCREMENT PRIMARY KEY,
     matricula INT,
     nome_prof VARCHAR(40),
-    disciplina VARCHAR(40)
+    disciplina VARCHAR(40),
+    carga_horaria INT,
+    quantidade_dias INT,
+    FOREIGN KEY (disciplina)
+        REFERENCES Disciplina (nome_disc)
 );
+
+#Turma Disciplina CH Qtd.Dias Docente
 
 SELECT id_prof FROM Professor WHERE nome_prof = 'Rasta de Shambalá 1';
 
 SELECT nome_prof FROM Professor;
 SELECT matricula, nome_prof FROM Professor ORDER BY matricula;
 delete from Professor where nome_prof = 'Rasta de Shambalá';
-insert into Professor(matricula, nome_prof) values(123456, 'Rasta de Shambalá 1');
-insert into Professor(matricula, nome_prof) values(1234567, 'Rasta de Shambalá 2');
-insert into Professor(matricula, nome_prof) values(12345678, 'Rasta de Shambalá 3');
-insert into Professor(matricula, nome_prof) values(123456789, 'Rasta de Shambalá 4');
+insert into Professor(matricula, nome_prof, disciplina) values(123456, 'Rasta de Shambalá 1', 'Disciplina de Teste');
+insert into Professor(matricula, nome_prof, disciplina) values(1234567, 'Rasta de Shambalá 2', 'Disciplina de Teste');
+insert into Professor(matricula, nome_prof, disciplina) values(12345678, 'Rasta de Shambalá 3', 'Disciplina de Teste');
+insert into Professor(matricula, nome_prof, disciplina) values(123456789, 'Rasta de Shambalá 4', 'Disciplina de Teste');
 SELECT id_prof FROM Professor where nome_prof = 'Rasta de Shambalá 1';
 
 CREATE TABLE Professor_Turno (
@@ -81,6 +93,8 @@ CREATE TABLE Coordenador (
 );
 insert into Coordenador(nome, login, senha) values('Nome de teste', 'teste', '123');
 
+
+
 CREATE TABLE Cronograma (
     id_professor INT,
     data_reserva DATE,
@@ -104,5 +118,18 @@ insert into Cronograma values(1, '20160609', '09:30 - 10:30', 'TEC50419', 1);
 insert into Cronograma values(1, '20160609', '10:30 - 11:30', 'TEC50419', 1);
 
 select id_professor from Cronograma where data_reserva = '20160609' and horario = '07:30 - 08:30';
-select * from Cronograma;
 SELECT nome_prof FROM Professor where id_prof = 1;
+truncate Cronograma;
+select count(*) from Cronograma;
+INSERT INTO  Cronograma (id_professor, data_reserva, horario, turma) VALUES (1, '20160606', '07:30 - 08:30', 'TEC50419');
+#DELETE FROM Cronograma WHERE id_professor = 1 AND data_reserva = '20160606' AND horario = '07:30 - 08:30', turma = 'TEC50419');
+SELECT * FROM (SELECT 0, '%s','%ss', 0.0) AS x;
+SELECT 0, '%s','%ss', 0.0;
+
+select horario from Horario order by horario;
+
+select * from Cronograma;
+use sis;
+INSERT INTO  Cronograma (id_professor, data_reserva, horario, turma) SELECT * FROM (SELECT 1, '20160606', '07:30 - 08:30', 'TEC50419') AS x WHERE NOT EXISTS (SELECT * FROM Cronograma WHERE id_professor = 1 AND data_reserva = '20160606'AND horario = '07:30 - 08:30' AND turma = 'TEC50419') LIMIT 1;
+select * from Cronograma;
+

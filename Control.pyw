@@ -92,13 +92,25 @@ class Banco():
 		ano = int(self.c.fetchone()[0])
 		return ano
 	def lista_de_professores(self):
-		self.c.execute('SELECT matricula, nome_prof FROM Professor ORDER BY matricula;')
+		self.c.execute('SELECT matricula, nome_prof, disciplina, carga_horaria, quantidade_dias FROM Professor ORDER BY matricula;')
 		profesores = self.c.fetchall()
 		return profesores
 	def lista_de_turmas(self):
 		self.c.execute('SELECT nome_turma, turno FROM Turma ORDER BY nome_turma;')
 		turmas = self.c.fetchall()
 		return turmas
+	def adicionar_turma(self, nome_turma, turno):
+		self.c.execute("INSERT INTO Turma(nome_turma, turno) SELECT * FROM (SELECT '%s','%s') AS x WHERE NOT EXISTS (SELECT * FROM Turma WHERE nome_turma = '%s' AND turno = '%s';"%(nome_turma, turno, nome_turma, turno))
+	def remover_turma(self, nome_prof, disciplina):
+		self.c.execute("DELETE FROM Turma WHERE nome_turma = '%s' AND turno = '%s';"%(nome_turma, turno))
+	def lista_de_turnos(self):
+		self.c.execute('SELECT *FROM Turno ORDER BY turno;')
+		turnos = self.c.fetchall()
+		lista_turnos = []
+		for ele in turnos:
+			lista_turnos.append(ele[0])
+		return lista_turnos
+
 	def verifica_login(self, login, senha):
 		self.c.execute("SELECT senha FROM Coordenador where login = '%s';"%login)
 		Senha = self.c.fetchone()[0]
@@ -106,12 +118,32 @@ class Banco():
 			return True
 		else:
 			return False
+	def adicionar_professor(self, matricula, nome_prof, disciplina, carga_horaria):
+		self.c.execute("INSERT INTO Professor(matricula, nome_prof, disciplina, carga_horaria, quantidade_dias) SELECT * FROM (SELECT %i ,'%s','%s', %i, %i) AS x WHERE NOT EXISTS (SELECT * FROM Professor WHERE  matricula = %i AND nome_prof = '%s' AND disciplina = '%s') LIMIT 1;"%(matricula, nome_prof, disciplina, carga_horaria, carga_horaria/4, matricula, nome_prof, disciplina))
+	
+	def remover_professor(self, nome_prof, disciplina):
+		self.c.execute("DELETE FROM Professor WHERE  nome_prof = '%s' AND disciplina = '%s';"%(nome_prof, disciplina))
+
 	def nomes_professores(self):
-		self.c.execute("SELECT nome_prof FROM Professor;")
+		self.c.execute("SELECT nome_prof FROM Professor ORDER BY (nome_prof);")
 		professores = []
 		for ele in self.c.fetchall():
 			professores.append(ele[0])
 		return professores
+
+	def adicionar_disciplina(self, disciplina):
+		self.c.execute("INSERT INTO Disciplina(nome_disc) SELECT * FROM (SELECT '%s') AS x WHERE NOT EXISTS (SELECT * FROM Disciplina WHERE nome_disc = '%s') LIMIT 1;"%(disciplina))
+	
+	def remover_disciplina(self, disciplina):
+		self.c.execute("DELETE FROM Disciplina WHERE nome_disc = '%s';"%(disciplina))
+	
+	def lista_disciplinas(self):
+		self.c.execute("SELECT * FROM Disciplina")
+		lista_de_disciplinas =  []
+		for ele in self.c.fetchall():
+			lista_de_disciplinas.append(ele[0])
+		return lista_de_disciplinas
+
 	def nomes_turmas(self):
 		self.c.execute("SELECT nome_turma FROM Turma;")
 		turmas = []
@@ -547,7 +579,8 @@ class Banco():
 
 if __name__ == '__main__':
 	BD = Banco()
-	print(BD.ano_atual())
+	print(BD.lista_de_turmas())
+	#remover_professor(self, nome_prof, disciplina):
 	# BD.desatribuir_aulas(
 	# 	lista_de_checkbox=[
 	# 	[1,1,1,1,0,0,0,0,0,0,0,0],
