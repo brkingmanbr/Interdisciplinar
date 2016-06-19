@@ -10,7 +10,7 @@ insert into turno values('Vespertino');
 insert into turno values('Noturno');
 
 CREATE TABLE Disciplina (
-    nome_disc VARCHAR(40) PRIMARY KEY
+    nome VARCHAR(40) PRIMARY KEY
 );
 
 insert into Disciplina values('Disciplina de Teste');
@@ -22,10 +22,17 @@ CREATE TABLE Professor (
     disciplina VARCHAR(40),
     carga_horaria INT,
     quantidade_dias INT,
+    disponibilidade varchar(300),
     FOREIGN KEY (disciplina)
         REFERENCES Disciplina (nome_disc)
 );
+INSERT INTO Professor(matricula, nome_prof, disciplina, carga_horaria, quantidade_dias, detalhe) SELECT * FROM (SELECT 21312 ,'asdad','Disciplina de Teste', 20, 5) AS x WHERE NOT EXISTS (SELECT * FROM Professor WHERE  matricula = 21312 AND nome_prof = 'asdad' AND disciplina = 'Disciplina de Teste') LIMIT 1;
 
+SELECT 
+    *
+FROM
+    professor
+ORDER BY (nome_prof);
 #Turma Disciplina CH Qtd.Dias Docente
 
 SELECT id_prof FROM Professor WHERE nome_prof = 'Rasta de Shambalá 1';
@@ -38,15 +45,6 @@ insert into Professor(matricula, nome_prof, disciplina) values(1234567, 'Rasta d
 insert into Professor(matricula, nome_prof, disciplina) values(12345678, 'Rasta de Shambalá 3', 'Disciplina de Teste');
 insert into Professor(matricula, nome_prof, disciplina) values(123456789, 'Rasta de Shambalá 4', 'Disciplina de Teste');
 SELECT id_prof FROM Professor where nome_prof = 'Rasta de Shambalá 1';
-
-CREATE TABLE Professor_Turno (
-    id_professor INT,
-    turno_turno VARCHAR(30),
-    FOREIGN KEY (id_professor)
-        REFERENCES Professor (id_prof)
-);
-
-
 
 CREATE TABLE Horario (
     horario VARCHAR(13) PRIMARY KEY,
@@ -92,7 +90,7 @@ CREATE TABLE Coordenador (
     senha VARCHAR(30)
 );
 insert into Coordenador(nome, login, senha) values('Nome de teste', 'teste', '123');
-
+SELECT nome FROM Coordenador ORDER BY nome;
 
 
 CREATE TABLE Cronograma (
@@ -132,4 +130,4 @@ select * from Cronograma;
 use sis;
 INSERT INTO  Cronograma (id_professor, data_reserva, horario, turma) SELECT * FROM (SELECT 1, '20160606', '07:30 - 08:30', 'TEC50419') AS x WHERE NOT EXISTS (SELECT * FROM Cronograma WHERE id_professor = 1 AND data_reserva = '20160606'AND horario = '07:30 - 08:30' AND turma = 'TEC50419') LIMIT 1;
 select * from Cronograma;
-
+select * from turno;

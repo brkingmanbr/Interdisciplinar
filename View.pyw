@@ -12,7 +12,8 @@ class Visao(Frame):
 		#self.start_menu()
 		#self.start_login()
 		#self.homepage()
-		self.professor()
+		#self.disciplina()
+		self.admin_home()
 
 	def homepage(self):
 		self.master.resizable(False,False)
@@ -35,8 +36,9 @@ class Visao(Frame):
 		self.editar = Menu(self.BarradeMenu)
 		self.BarradeMenu.add_cascade(label="Home", command= self.homepage)
 		self.BarradeMenu.add_cascade(label="Editar", menu=self.editar)
-		self.editar.add_command(label="Editar Professores", command=self.professor) #deve abrir o CRUD de professor
-		self.editar.add_command(label="Editar Turmas", command=self.turma) #deve abrir o CRUD de turmas
+		self.editar.add_command(label="Editar Professores", command=self.professor)
+		self.editar.add_command(label="Editar Turmas", command=self.turma)
+		self.editar.add_command(label="Editar Disciplinas", command=self.disciplina)
 		self.login = Menu(self.BarradeMenu)
 		self.BarradeMenu.add_cascade(label="Login", menu=self.login)
 		self.cronograma_menu = Menu(self.BarradeMenu)		
@@ -67,8 +69,68 @@ class Visao(Frame):
 	def verifica_login(self):
 		if self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == True:
 			self.homepage()
-		else:
+		elif self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == False:
 			self.master.title("Senha ou Login incorretos tente novamente")
+		elif self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == 'admin':
+			self.admin_home()
+
+	def admin_menu(self):
+		self.master.MENU = Frame(self.master)
+		self.master.MENU.grid()
+		self.BarradeMenu = Menu(self.master.MENU)
+		self.master.config(menu=self.BarradeMenu)
+		self.editar = Menu(self.BarradeMenu)
+		self.BarradeMenu.add_cascade(label=" Gerenciar Coordenadores", command=self.admin_coordenador)
+		self.BarradeMenu.add_cascade(label=" Banco de Dados", command=self.admin_resetar_banco)
+		self.master.title("Voce está no modo Administrador tenha Cuidado!!")
+	def admin_home(self):
+		self.admin_refresh()
+		self.Admin_Home = Frame(self.master)
+		self.Admin_Home.grid()
+		load = Image.open('admin.png')
+		render = ImageTk.PhotoImage(load)
+		img = Label(self.Admin_Home, image=render)
+		img.image = render
+		img.grid(row=0, column=0, columnspan=2)
+		# Label(self.Administrador, text='TODAS AS OPERAÇÕES ABAIXO SERÃO EXECUTADAS NO COORDENADOR SELECIONADO').grid(row=0, column=0, columnspan=4)
+		# Label(self.Administrador, text='Coordenador: ').grid(row=1, column=0)
+		# Button(self.Administrador, text='Alterar Nome Para').grid(row=2, column=0)
+		# self.NomeNovo = StringVar()
+		# Entry(self.Administrador, textvariable= self.NomeNovo).grid(row=2, column=1)
+		# Button(self.Administrador, text='Resetar Senha').grid(row=3,column=0)
+
+	def admin_refresh(self):
+		for widget in self.master.winfo_children():
+			widget.destroy()
+		self.admin_menu()
+
+	def admin_resetar_banco(self):
+		self.admin_refresh()
+		self.Resetar = Frame(self.master)
+		self.Resetar.grid()
+		Label(self.Resetar, text='Senha Admin: ').grid(row=0,column=0, sticky='WE')
+		self.SenhaAdmin = StringVar()
+		Entry(self.Resetar, textvariable=self.SenhaAdmin).grid(row=0,column=1, sticky='WE')
+		Button(self.Resetar, text='Resetar Todo o Banco de Dados').grid(row=1,column=0, columnspan=2, sticky='WE')
+		
+	def admin_coordenador(self):
+		self.admin_refresh()
+		self.AdicionaDeletaCoordenador = Frame(self.master)
+		self.AdicionaDeletaCoordenador.grid()
+		Label(self.AdicionaDeletaCoordenador, text ='Nome: ').grid(row=0,column=0,sticky='we')
+		self.NomeCoordenador = StringVar()
+		self.LoginCoordenador = StringVar()
+		Entry(self.AdicionaDeletaCoordenador, textvariable= self.NomeCoordenador).grid(row=0,column=1,sticky='we')
+		Label(self.AdicionaDeletaCoordenador, text = 'Login').grid(row=1,column=0,sticky='we')
+		Entry(self.AdicionaDeletaCoordenador, textvariable= self.LoginCoordenador).grid(row=1,column=1,sticky='we')
+		Button(self.AdicionaDeletaCoordenador, text = 'Adicionar', command = lambda: [self.master.Bd.adicionar_coordenador(nome = self.NomeCoordenador.get(), login=self.LoginCoordenador.get()), self.admin_coordenador()]).grid(row=2,column=0, columnspan=2 ,sticky='we')		
+		Label(self.AdicionaDeletaCoordenador, text='Selecione um coordenador').grid(row=3,column=0, columnspan=2, sticky='we')
+		self.Coordenador = StringVar()
+		Combobox(self.AdicionaDeletaCoordenador, textvariable=self.Coordenador, state='readonly', values= self.master.Bd.nomes_coordenadores()).grid(row=4, column=0, columnspan = 2, sticky='we')
+		Button(self.AdicionaDeletaCoordenador, text='Resetar Senha do coordenador', command=lambda:[self.master.Bd.resetar_senha_coordenador(nome = self.Coordenador.get()), self.admin_coordenador()]).grid(row=5,column=0, columnspan=1,sticky='we')
+		Label(self.AdicionaDeletaCoordenador, textvariable=self.Coordenador).grid(row=5,column=1, columnspan=1,sticky='we')
+		Button(self.AdicionaDeletaCoordenador, text = 'Remover', command = lambda: self.master.Bd.remover_coordenador(nome = self.NomeCoordenador.get())).grid(row=7,column=0, sticky='we')
+
 	def cronoprofessor(self):
 		self.refresh()
 		self.master.title("Cronograma de Professor")
@@ -122,13 +184,10 @@ class Visao(Frame):
 		Label(self.GerenciadorCalendario, text='Nos seguintes horários: ').grid(row=4, column=0, columnspan=100)
 		Dias_da_semana = ('Segunda','Terça','Quarta','Quinta','Sexta','Sábado')
 		self.v = IntVar()
-		
-		#Segunda = []; Terça = []; Quarta = []; Quinta = [];	Sexta = [];	Sábado = []
-		self.master.Semana = [[],[],[],[],[],[]]#[Segunda, Terça , Quarta, Quinta, Sexta, Sábado]
-
+		self.master.Semana = [[],[],[],[],[],[]]
 		for dia in self.master.Semana: 
 			for x in range(0,12): 
-				x = IntVar() ###### StringVar() para mostrar o horário
+				x = IntVar()
 				dia.append(x)
 		y = 0
 		for dias in range(0,12,2):
@@ -138,7 +197,6 @@ class Visao(Frame):
 		hora = 0
 		for h in range(0,12,2):
 			for l in range(0,12):
-				#onvalue = str(self.master.Bd.horarios()[l])  para mostrar o horário
 				Checkbutton(self.GerenciadorCalendario, text = h, onvalue = 1, variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
 				Label(self.GerenciadorCalendario, text = self.master.Bd.horarios()[l]).grid(row=l+6, column=h+1, sticky= 'WE')
 				hora+=1
@@ -154,10 +212,9 @@ class Visao(Frame):
 				lista_de_inteiros[dia].append(self.master.Semana[dia][x].get())
 		return lista_de_inteiros
 
-	
 	def cronograma(self, linha = 0, coluna = 0, tipo='', professor_ou_turma=''):
 		ano = self.master.Bd.ano_atual()
-		self.refresh()
+		self.refresh()	
 		self.master.title("Cronograma "+professor_ou_turma)
 		self.Calendario = Frame(self.master)
 		self.Calendario.grid(row=linha, column=coluna)
@@ -301,8 +358,8 @@ class Visao(Frame):
 		self.CargaHoraria = StringVar()
 		Entry(self.Prof, textvariable=self.CargaHoraria).grid(row=4, column=1, columnspan=4,  sticky='WE')
 
-		Button(self.Prof, text='Adicionar Professor', command= lambda: self.professor_add_del(tipo = 'adicionar')).grid(row=5, column=0, sticky='WE')
-		Button(self.Prof, text='Deletar Professor', command= lambda: self.professor_add_del(tipo = 'remover')).grid(row=5, column=1, sticky='WE')
+		Button(self.Prof, text='Adicionar Professor', command= lambda: [self.master.Bd.adicionar_professor(matricula = int(self.Matricula.get()),nome_prof = self.Nome.get(),disciplina = self.Disciplina.get(),carga_horaria = int(self.CargaHoraria.get())), self.refresh(), self.professor()]).grid(row=5, column=0, sticky='WE')
+		Button(self.Prof, text='Deletar Professor', command= lambda: [self.master.Bd.remover_professor(nome_prof = self.Nome.get(), disciplina = self.Disciplina.get()), self.refresh(), self.professor()]).grid(row=5, column=1, sticky='WE')
 		Label(self.Prof, text='Professores já cadastrados:', anchor='center').grid(row=6, column=0, columnspan=5, sticky='WE')
 		
 		campos = ['Matricula', 'Nome', 'Disciplina', 'Carga Horaria', 'Quantidade Dias']
@@ -316,52 +373,43 @@ class Visao(Frame):
 				coluna+=1
 			linha+=1
 			coluna=0
-	def professor_add_del(self, tipo):
-		if tipo == 'adicionar':
-			self.master.Bd.adicionar_professor(matricula = int(self.Matricula.get()),nome_prof = self.Nome.get(),disciplina = self.Disciplina.get(),carga_horaria = int(self.CargaHoraria.get()))
-		elif tipo == 'remover':
-			print(self.Nome.get(), self.Disciplina.get())
-			self.master.Bd.remover_professor(nome_prof = self.Nome.get(), disciplina = self.Disciplina.get())
-		self.refresh()
-		self.professor()
+
 	def disciplina(self):
 		self.refresh()
 		self.master.title("Disciplinas")
 		self.Disciplinas = Frame(self.master).grid()
-		Label(self.Disciplinas, text='Nome da Disciplina').grid(row=0, column=0, columnspan=2)
-		Entry(self.Disciplinas, teext='Cadastrar').grid(row=1, column=0)
-		Entry(self.Disciplinas, teext='Deletar').grid(row=1, column=1)
-	################################################EU ESTAVA TRABALHANDO NO ADICIONAR DELETAR TURMAS######################################
+		Label(self.Disciplinas, text='Nome da Disciplina', anchor='center').grid(row=0, column=0, sticky='WE')
+		self.Nome_Disciplina = StringVar()
+		Entry(self.Disciplinas, textvariable=self.Nome_Disciplina).grid(row=0, column=1, sticky='WE')
+		Button(self.Disciplinas, text='Cadastrar',command=lambda:[self.master.Bd.adicionar_disciplina(nome_disciplina = self.Nome_Disciplina.get()), self.refresh(), self.disciplina()]).grid(row=1, column=0, sticky='WE')
+		Button(self.Disciplinas, text='Deletar',command=lambda:[self.master.Bd.remover_disciplina(nome_disciplina = self.Nome_Disciplina.get()), self.refresh(), self.disciplina()]).grid(row=1, column=1, sticky='WE')
+		Label(self.Disciplinas, text='Disciplinas já cadastradas', anchor='center').grid(row=2, column=0, columnspan=2, sticky='WE')
+		linha = 3
+		for ele in self.master.Bd.lista_disciplinas():
+			Label(self.Disciplinas, text=ele).grid(row=linha, column=0, columnspan=2, sticky='WE')
+			linha+=1
+
 	def turma(self):
 		self.refresh()
 		self.master.title("Turmas")
 		self.Turma = Frame(self.master).grid()
 		Label(self.Turma, text='Turma').grid(row=0, column=0, sticky='WE')
-		Turma = StringVar()
-		Entry(self.Turma, textvariable=Turma).grid(row=0, column=1, sticky='WE')
+		self.Nome = StringVar()
+		Entry(self.Turma, textvariable=self.Nome).grid(row=0, column=1, sticky='WE')
 		Label(self.Turma, text='Turno').grid(row=1, column=0, sticky='WE')
 		self.Turno = StringVar()
 		Combobox(self.Turma, textvariable=self.Turno, state='readonly', values= self.master.Bd.lista_de_turnos()).grid(row=1, column=1, sticky='WE')
-		Label(self.Turma, text='Turno').grid(row=1, column=0)
-
-		Button(self.Prof, text='Adicionar Turma', command= lambda: self.turma_add_del(tipo = 'adicionar')).grid(row=5, column=0, sticky='WE')
-		Button(self.Prof, text='Deletar Turma', command= lambda: self.turma_add_del(tipo = 'remover')).grid(row=5, column=1, sticky='WE')
-
-		Label(self.Turma, text='Turmas já cadastradas:').grid(row=4, column=0, columnspan=2, sticky='WE')
-		linha = 4
+		Button(self.Turma, text='Adicionar Turma', command= lambda: [self.master.Bd.adicionar_turma(nome_turma = self.Nome.get(), turno = self.Turno.get()), self.refresh(), self.turma()]).grid(row=5, column=0, sticky='WE')
+		Button(self.Turma, text='Deletar Turma', command= lambda: [self.master.Bd.remover_turma(nome_turma = self.Nome.get(), turno = self.Turno.get()), self.refresh(), self.turma()]).grid(row=5, column=1, sticky='WE')
+		Label(self.Turma, text='Turmas já cadastradas:', anchor='center').grid(row=6, column=0, columnspan=2, sticky='WE')
+		Label(self.Turma, text='Nome', anchor='center').grid(row=7, column=0, sticky='WE')
+		Label(self.Turma, text='Turno', anchor='center').grid(row=7, column=1, sticky='WE')
+		linha = 8
 		for turma in self.master.Bd.lista_de_turmas():
-			nomet, turno = turma
-			Label(self.Turma, text='Nome: %s'%nomet).grid(row=linha, column=0, sticky='WE')
-			Label(self.Turma, text='Turno: %s'%turno).grid(row=linha, column=1, sticky='WE')
+			nome, turno = turma
+			Label(self.Turma, text=nome, anchor='center').grid(row=linha, column=0, sticky='WE')
+			Label(self.Turma, text=turno, anchor='center').grid(row=linha, column=1, sticky='WE')
 			linha+=1
-	def turma_add_del(self, tipo):
-		if tipo == 'adicionar':
-			self.master.Bd.adicionar_turma(matricula = int(self.Matricula.get()),nome_prof = self.Nome.get(),disciplina = self.Disciplina.get(),carga_horaria = int(self.CargaHoraria.get()))
-		elif tipo == 'remover':
-			print(self.Nome.get(), self.Disciplina.get())
-			self.master.Bd.remover_turma(nome_prof = self.Nome.get(), disciplina = self.Disciplina.get())
-		self.refresh()
-		self.professor()
 
 if __name__ == '__main__':
 	JP = Tk()
