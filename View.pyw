@@ -7,19 +7,20 @@ from Control import *
 class Visao(Frame):
 	def __init__(self, master = None):
 		Frame.__init__(self, master)
-		self.ID_Coordenador = ''
+		self.ID_Coordenador = None
 		self.master = master
 		self.master.Bd = Banco()
 		self.start_login()
+		self.grid()
 		#self.start_menu()
 		#self.homepage()
 		#self.disciplina()
-		#self.admin_home()
+		#self.admin_resetar_banco()
 
 	def homepage(self):
 		self.master.resizable(False,False)
 		self.refresh()
-		self.master.title('Homepage - Seja Bem Vindo')
+		self.master.title('SGCPS - Seja Bem Vindo: '+self.master.Bd.nome_coordenador(id = self.ID_Coordenador))
 		self.refresh()
 		self.Home = Frame(self.master).grid()
 		load = Image.open('home.jpg')
@@ -47,30 +48,39 @@ class Visao(Frame):
 		self.cronograma_menu.add_command(label="Atribuir Aulas", command=self.gerenciador_de_cronograma)
 		self.cronograma_menu.add_command(label="Cronograma de Professor", command=self.cronoprofessor)
 		self.cronograma_menu.add_command(label="Cronograma de Turma", command=self.cronoturma)
+		self.BarradeMenu.add_command(label="Logout", command= lambda: self.start_login())
 
 	def start_login(self):
-		self.master.title("Tela de Login")
-		self.grid()
+		if len(self.master.winfo_children()) > 1:
+			for widget in self.master.winfo_children():
+				widget.destroy()
+		self.ID_Coordenador = None
+		self.master.title("Login SGCPS")
+		self.Login = Frame(self.master)
+		self.Login.grid()
 		load = Image.open('aang.png')
 		render = ImageTk.PhotoImage(load)
-		img = Label(self, image=render)
+		img = Label(self.Login, image=render)
 		img.image = render
 		img.grid(row=0, column=0, columnspan=2)
 
-		UsuarioL = Label(self, text='Username: ', anchor='w').grid(row=1, column=0, sticky='we')
+		UsuarioL = Label(self.Login, text='Username: ', anchor='w').grid(row=1, column=0, sticky='we')
 		self.user = StringVar()
-		UsuarioE = Entry(self, textvariable = self.user).grid(row=1, column=1, sticky='we')
-		SenhaL = Label(self, text='Password: ', anchor='w').grid(row=2, column=0, sticky='we')
+		UsuarioE = Entry(self.Login, textvariable = self.user).grid(row=1, column=1, sticky='we')
+		SenhaL = Label(self.Login, text='Password: ', anchor='w').grid(row=2, column=0, sticky='we')
 		self.senha = StringVar()
-		SenhaE = Entry(self, textvariable = self.senha, show='*').grid(row=2, column=1, sticky='we')
-		Login = Button(self, text='Login', command= self.verifica_login).grid(row=3, columnspan=2, sticky='we')
+		SenhaE = Entry(self.Login, textvariable = self.senha, show='*').grid(row=2, column=1, sticky='we')
+		Login = Button(self.Login, text='Login', command= self.verifica_login).grid(row=3, columnspan=2, sticky='we')
 		self.master.title("Tela de Login")
-		self.master.resizable(False,False)
+		#self.master.resizable(False,False)
 
 	def verifica_login(self):
 		if self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == True:
 			self.ID_Coordenador = self.master.Bd.id_coordenador(usuario = self.user.get())
-			self.homepage()
+			if self.senha.get() == '123456':
+				self.alterar_senha(primeira_vez= True)
+			else:
+				self.homepage()
 		elif self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == False:
 			self.master.title("Senha ou Login incorretos tente novamente")
 		elif self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == 'admin':
@@ -85,6 +95,7 @@ class Visao(Frame):
 		self.BarradeMenu.add_cascade(label=" Gerenciar Coordenadores", command=self.admin_coordenador)
 		self.BarradeMenu.add_cascade(label=" Banco de Dados", command=self.admin_resetar_banco)
 		self.master.title("Voce está no modo Administrador tenha Cuidado!!")
+		self.BarradeMenu.add_command(label="Logout", command= self.start_login)
 	def admin_home(self):
 		self.admin_refresh()
 		self.Admin_Home = Frame(self.master)
@@ -104,10 +115,10 @@ class Visao(Frame):
 		self.admin_refresh()
 		self.Resetar = Frame(self.master)
 		self.Resetar.grid()
-		Label(self.Resetar, text='Senha Admin: ').grid(row=0,column=0, sticky='WE')
+		Label(self.Resetar, text='Insira a senha do admin novamente').grid(row=0,column=0, sticky='WE')
 		self.SenhaAdmin = StringVar()
-		Entry(self.Resetar, textvariable=self.SenhaAdmin).grid(row=0,column=1, sticky='WE')
-		Button(self.Resetar, text='Resetar Todo o Banco de Dados').grid(row=1,column=0, columnspan=2, sticky='WE')
+		Entry(self.Resetar, textvariable=self.SenhaAdmin, show='*').grid(row=1,column=0, columnspan=2, sticky='WE')
+		Button(self.Resetar, text='!!!Resetar Todo o Banco de Dados !!', command = lambda: self.master.Bd.resetar_banco(senha = self.SenhaAdmin.get())).grid(row=2,column=0, columnspan=2, sticky='WE')
 		
 	def admin_coordenador(self):
 		self.admin_refresh()
@@ -126,6 +137,21 @@ class Visao(Frame):
 		Button(self.AdicionaDeletaCoordenador, text='Resetar Senha do coordenador', command=lambda:[self.master.Bd.resetar_senha_coordenador(nome = self.Coordenador.get()), self.admin_coordenador()]).grid(row=5,column=0, columnspan=1,sticky='we')
 		Label(self.AdicionaDeletaCoordenador, textvariable=self.Coordenador).grid(row=5,column=1, columnspan=1,sticky='we')
 		Button(self.AdicionaDeletaCoordenador, text = 'Remover', command = lambda: self.master.Bd.remover_coordenador(nome = self.NomeCoordenador.get())).grid(row=7,column=0, sticky='we')
+	
+	def alterar_senha(self, primeira_vez = False):
+		self.refresh()
+		self.master.title("Alterar Senha")
+		self.AlterarSenha = Frame(self.master)
+		self.AlterarSenha.grid()
+		if primeira_vez:
+			Label(self.AlterarSenha, text='Primeiro login: recomendável a troca da senha').grid(row=0, column=0, columnspan=2, sticky='we')
+		Label(self.AlterarSenha, text='Senha Atual').grid(row=1, column=0, sticky='we')
+		Label(self.AlterarSenha, text='Senha Nova').grid(row=2, column=0, sticky='we')
+		self.SenhaAntiga = StringVar()
+		self.SenhaNova = StringVar()
+		Entry(self.AlterarSenha, textvariable=self.SenhaAntiga).grid(row=1, column=1, sticky='we')
+		Entry(self.AlterarSenha, textvariable=self.SenhaNova).grid(row=2, column=1, sticky='we')	
+		Button(self.AlterarSenha, text='Alterar', command = lambda: self.master.Bd.alterar_senha_coordenador(id_coord = self.ID_Coordenador, senha_velha = self.SenhaAntiga.get(), senha_nova = self.SenhaNova.get())).grid(row=3, column=0, columnspan=2, sticky='we')
 
 	def cronoprofessor(self):
 		self.refresh()
@@ -152,7 +178,7 @@ class Visao(Frame):
 		self.master.title("Gerenciador de Cronogramas")
 		self.Gerenciador = Frame(self.master)
 		self.Gerenciador.grid(row=0)
-		Label(self.Gerenciador, text='Professor: ').grid(row=0, column=0)
+		Label(self.Gerenciador, text='O professor: ').grid(row=0, column=0)
 		self.Professor = StringVar()
 		Combobox(self.Gerenciador, textvariable=self.Professor, state='readonly', values= self.master.Bd.nomes_professores()).grid(row=0, column=1)
 		Label(self.Gerenciador, text='Lecionara na Turma: ').grid(row=1, column=0)
@@ -171,7 +197,7 @@ class Visao(Frame):
 		self.diaFinal = StringVar()
 		self.mesFinal = StringVar()
 		self.anoFinal = StringVar()
-		Label(self.Gerenciador, text=' até ').grid(row=3, column=0)
+		Label(self.Gerenciador, text=' Até ').grid(row=3, column=0)
 		Combobox(self.Gerenciador, textvariable=self.diaFinal, state='readonly', values=dias).grid(row=3, column=1)
 		Combobox(self.Gerenciador, textvariable=self.mesFinal, state='readonly', values=meses).grid(row=3, column=2)
 		Combobox(self.Gerenciador, textvariable=self.anoFinal, state='readonly', values=anos).grid(row=3, column=3)
@@ -187,19 +213,21 @@ class Visao(Frame):
 				dia.append(x)
 		y = 0
 		for dias in range(0,12,2):
-			Label(self.GerenciadorCalendario, text=Dias_da_semana[y]+str(dias), anchor='center').grid(row=5, column=dias, columnspan=2, sticky= 'WE')
+			Label(self.GerenciadorCalendario, text=Dias_da_semana[y], anchor='center').grid(row=5, column=dias, columnspan=2, sticky= 'WE')
 			y+=1
 		dia = 0
 		hora = 0
 		for h in range(0,12,2):
 			for l in range(0,12):
-				Checkbutton(self.GerenciadorCalendario, text = h, onvalue = 1, variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
+				Checkbutton(self.GerenciadorCalendario, onvalue = 1, variable=self.master.Semana[dia][hora]).grid(row=l+6, column=h, sticky= 'WE')
 				Label(self.GerenciadorCalendario, text = self.master.Bd.horarios()[l]).grid(row=l+6, column=h+1, sticky= 'WE')
 				hora+=1
 			dia+=1
 			hora=0
-		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(horarios_das_aulas=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=18, column=0, columnspan=100, sticky= 'WE')
-		Button(self.GerenciadorCalendario, text='Apagar Aulas').grid(row=19, column=0, columnspan=100, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Marcar aulas', command= lambda: self.master.Bd.atribuir_aulas(horarios_das_aulas=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=18, column=0, columnspan=20, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Apagar aulas', command= lambda: self.master.Bd.desatribuir_aulas(horarios_das_aulas=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=19, column=0, columnspan=20, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Desatribuir aulas de qualquer Professor na Turma e Horários Selecionados', command= lambda: self.master.Bd.desatribuir_qualquer_professor(horarios_das_aulas=self.semana_em_inteiros(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=20, column=0, columnspan=20, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Desatribuir aulas deste Professor em qualquer Turma nos Horários Selecionados', command= lambda: self.master.Bd.desatribuir_qualquer_turma(horarios_das_aulas=self.semana_em_inteiros(), professor=self.Professor.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=21, column=0, columnspan=20, sticky= 'WE')
 		
 	def semana_em_inteiros(self):
 		lista_de_inteiros = [[],[],[],[],[],[]]
@@ -208,15 +236,17 @@ class Visao(Frame):
 				lista_de_inteiros[dia].append(self.master.Semana[dia][x].get())
 		return lista_de_inteiros
 
-	def cronograma(self, linha = 0, coluna = 0, tipo='', professor_ou_turma=''):
-		ano = self.master.Bd.ano_atual()
+	def cronograma(self, ano = None, tipo='', professor_ou_turma='', linha = 0, coluna = 0):
+		if ano == None: 
+			ano = self.master.Bd.ano_atual()
+
 		self.refresh()	
 		self.master.title("Cronograma "+professor_ou_turma)
 		self.Calendario = Frame(self.master)
 		self.Calendario.grid(row=linha, column=coluna)
-		Button(self.Calendario, text='Retroceder').grid(row=linha,column=0, columnspan=3, sticky='WE')
-		Label(self.Calendario, text='Ano Atual: %i'%self.master.Bd.ano_atual()).grid(row=linha,column=3)
-		Button(self.Calendario, text='Avançar').grid(row=linha,column=4, columnspan=3, sticky='WE')
+		Button(self.Calendario, text='Retroceder', command = lambda: self.cronograma(ano = ano-1, tipo=tipo, professor_ou_turma=professor_ou_turma)).grid(row=linha,column=0, columnspan=3, sticky='WE')
+		Label(self.Calendario, text='Ano Atual: %i'%ano).grid(row=linha,column=3)
+		Button(self.Calendario, text='Avançar', command = lambda: self.cronograma( ano = ano+1, tipo=tipo, professor_ou_turma=professor_ou_turma)).grid(row=linha,column=4, columnspan=3, sticky='WE')
 		self.meses = Notebook(self.Calendario)
 		Janeiro = Frame(self.meses)
 		Fevereiro = Frame(self.meses)
@@ -297,8 +327,7 @@ class Visao(Frame):
 			lista_de_horarios[2].append(horarios[num+8])
 		
 		ele_in_horario = 0
-		turnoooooooooo = ['turno1','turno2','turno3']
-
+		
 		for turno in Lista_Turnos:
 			Label(turno, text='Segunda').grid(row=1, column=2)
 			Label(turno, text='Terça').grid(row=1, column=3)

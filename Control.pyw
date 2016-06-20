@@ -8,6 +8,8 @@ class Banco():
 	                  'autocommit':True}
 	    self.banco = bd.connect(**self.parametros)
 	    self.c = self.banco.cursor()
+	    self.cria_banco()
+	def cria_banco(self):
 	    self.c.execute('''
 	    	CREATE DATABASE IF NOT EXISTS SIS;
 	    	USE SIS;
@@ -73,6 +75,10 @@ class Banco():
 	    	self.c.execute("INSERT INTO Horario SELECT '%s', '%s' AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+4], turnos[1], horarios[ind+4]))
 	    	self.c.execute("INSERT INTO Horario SELECT '%s', '%s' AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+8], turnos[2], horarios[ind+8]))
 
+	def resetar_banco(self, senha):
+		if senha == 'cimatec':
+			self.c.execute("DROP DATABASE SIS;")
+			self.cria_banco()
 
 	def primeiro_dia_do_mes(self, mes, ano = '2016', dia = '1'):
 	    self.c.execute('''
@@ -116,7 +122,7 @@ class Banco():
 	def adicionar_disciplina(self, nome_disciplina):
 		self.c.execute("INSERT INTO Disciplina(nome) SELECT '%s' AS x WHERE NOT EXISTS (SELECT * FROM Disciplina WHERE nome = '%s') LIMIT 1;"%(nome_disciplina, nome_disciplina))
 	def remover_disciplina(self, nome_disciplina):
-		self.c.execute("DELETE FROM Discilpina WHERE nome = '%s';"%(nome_disciplina))
+		self.c.execute("DELETE FROM Disciplina WHERE nome = '%s';"%(nome_disciplina))
 	def lista_disciplinas(self):
 		self.c.execute("SELECT * FROM Disciplina")
 		lista_de_disciplinas =  []
@@ -124,8 +130,8 @@ class Banco():
 			lista_de_disciplinas.append(ele[0])
 		return lista_de_disciplinas
 	
-	def adicionar_coordenador(self, nome, login):
-		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT '%s', '%s', '123456' AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' AND senha = '%s') LIMIT 1;"%(nome, login, nome, login))
+	def adicionar_coordenador(self, nome, login):		
+		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT '%s', '%s', '123456' AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' OR login = '%s') LIMIT 1;"%(nome, login, nome, login))
 	def id_coordenador(self, usuario):
 		self.c.execute("SELECT id FROM Coordenador WHERE login = '%s';"%usuario)
 		return self.c.fetchone()[0]
@@ -133,6 +139,13 @@ class Banco():
 		self.c.execute("DELETE FROM Coordenador WHERE nome = '%s';"%(nome))
 	def resetar_senha_coordenador(self, nome):
 		self.c.execute("UPDATE Coordenador SET senha = '123456' WHERE nome = '%s';"%nome)
+
+	def alterar_senha_coordenador(self, id_coord, senha_velha, senha_nova):
+		self.c.execute("UPDATE Coordenador SET senha = '%s' WHERE id = '%i' AND senha = '%s';"%(senha_nova, id_coord, senha_velha))
+
+	def nome_coordenador(self, id):
+		self.c.execute('SELECT nome FROM Coordenador WHERE id = %i;'%id)
+		return self.c.fetchone()[0]
 	def nomes_coordenadores(self):
 		self.c.execute('SELECT nome FROM Coordenador ORDER BY nome;')
 		coordenadores = self.c.fetchall()
@@ -593,12 +606,369 @@ class Banco():
 													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
 													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 
+	def desatribuir_qualquer_professor(self, horarios_das_aulas, turma, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final, id_coord):
+		executar = True		
+		if int(ano_final) < int(ano_inicio):
+			executar = False
+		elif int(ano_final) == int(ano_inicio):
+			if int(mes_final) < int(mes_inicio):
+				executar = False
+			elif int(mes_final) == int(mes_inicio):
+					if int(dia_final) < int (dia_inicio): 
+						executar = False
+		if executar == True:
+			self.c.execute("SELECT horario FROM Horario ORDER BY (horario);")
+			resultado = self.c.fetchall()
+			horarios = []
+			for ele in resultado:
+				horarios.append(ele[0])
+			horarios_das_aulas.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
+
+			dias_da_semana = []
+			for dia in horarios_das_aulas:
+				if 1 in dia:
+					dias_da_semana.append(True)
+				else:
+					dias_da_semana.append(False)
+			for ano in range(int(ano_inicio),int(ano_final)+1):
+				if int(ano_inicio) == int(ano_final):
+					for mes in range(int(mes_inicio), int(mes_final)+1):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						ultimo_dia = int(str(self.c.fetchone()[0])[8:])
+						if mes == int(mes_final):
+							ultimo_dia = int(dia_final)
+						for dia in range(1, ultimo_dia+1):
+							if mes <= int(mes_final):
+								if dia < 10 and mes <10: 
+									self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+								elif mes < 10:
+									self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+								elif dia < 10:
+									self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+								else:
+									self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+								dia_da_semana = self.c.fetchone()[0]
+								if dia_da_semana != None and dia_da_semana <= 7:
+									if dias_da_semana[dia_da_semana-1]:
+										for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+											if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+												if dia < 10 and mes <10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+												elif mes < 10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+												elif dia < 10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+												else:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+
+				elif ano == int(ano_inicio):
+					for mes in range(int(mes_inicio), 13):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						for dia in range(1, int(str(self.c.fetchone()[0])[8:])+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											
+										
+				elif ano >int(ano_inicio) and ano < int(ano_final):
+					
+					for mes in range(1, 13):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						for dia in range(1, int(str(self.c.fetchone()[0])[8:])+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+				else:
+					for mes in range(1, int(mes_final)+1):
+						for dia in range(1, int(dia_final)+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%( str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+
+	def desatribuir_qualquer_turma(self, horarios_das_aulas, professor, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final, id_coord):
+		executar = True		
+		if int(ano_final) < int(ano_inicio):
+			executar = False
+		elif int(ano_final) == int(ano_inicio):
+			if int(mes_final) < int(mes_inicio):
+				executar = False
+			elif int(mes_final) == int(mes_inicio):
+					if int(dia_final) < int (dia_inicio): 
+						executar = False
+		if executar == True:
+			self.c.execute("SELECT id_prof FROM Professor WHERE nome_prof = '%s';"%professor)
+			id_professor = self.c.fetchone()[0]
+			
+			self.c.execute("SELECT horario FROM Horario ORDER BY (horario);")
+			resultado = self.c.fetchall()
+			horarios = []
+			for ele in resultado:
+				horarios.append(ele[0])
+			
+			horarios_das_aulas.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
+
+			dias_da_semana = []
+			for dia in horarios_das_aulas:
+				if 1 in dia:
+					dias_da_semana.append(True)
+				else:
+					dias_da_semana.append(False)
+			for ano in range(int(ano_inicio),int(ano_final)+1):
+				if int(ano_inicio) == int(ano_final):
+					for mes in range(int(mes_inicio), int(mes_final)+1):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						ultimo_dia = int(str(self.c.fetchone()[0])[8:])
+						if mes == int(mes_final):
+							ultimo_dia = int(dia_final)
+						for dia in range(1, ultimo_dia+1):
+							if mes <= int(mes_final):
+								if dia < 10 and mes <10: 
+									self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+								elif mes < 10:
+									self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+								elif dia < 10:
+									self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+								else:
+									self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+								dia_da_semana = self.c.fetchone()[0]
+								if dia_da_semana != None and dia_da_semana <= 7:
+									if dias_da_semana[dia_da_semana-1]:
+										for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+											if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+												if dia < 10 and mes <10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+												elif mes < 10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s'  AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+												elif dia < 10:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+												else:
+													self.c.execute('''
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s'  AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+
+				elif ano == int(ano_inicio):
+					for mes in range(int(mes_inicio), 13):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						for dia in range(1, int(str(self.c.fetchone()[0])[8:])+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											
+										
+				elif ano >int(ano_inicio) and ano < int(ano_final):
+					
+					for mes in range(1, 13):
+						if mes < 10: 
+							self.c.execute("SELECT LAST_DAY('%s-0%s-01')"%(str(ano), str(mes)));
+						else:
+							self.c.execute("SELECT LAST_DAY('%s-%s-01')"%(str(ano), str(mes)));
+						for dia in range(1, int(str(self.c.fetchone()[0])[8:])+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s'  AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+				else:
+					for mes in range(1, int(mes_final)+1):
+						for dia in range(1, int(dia_final)+1):
+							if dia < 10 and mes <10: 
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-0%s')"%(str(ano), str(mes), str(dia)));
+							elif mes < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-0%s-%s')"%(str(ano), str(mes), str(dia)));
+							elif dia < 10:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-0%s')"%(str(ano), str(mes), str(dia)));
+							else:
+								self.c.execute("SELECT DAYOFWEEK('%s-%s-%s')"%(str(ano), str(mes), str(dia)));
+							dia_da_semana = self.c.fetchone()[0]
+							if dia_da_semana != None and dia_da_semana <= 7:
+								if dias_da_semana[dia_da_semana-1]:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
+											if dia < 10 and mes <10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif mes < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											elif dia < 10:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+											else:
+												self.c.execute('''
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], id_coord))
+
+
+
 	def close(self):
 		self.banco.close()
 
 if __name__ == '__main__':
 	BD = Banco()
-	#print(BD.id_coordenador(nome = 'coordenador'))
+	#BD.resetar_banco()	
+	print(BD.nome_coordenador(id = 1))
 	#remover_professor(self, nome_prof, disciplina):
 	# BD.desatribuir_aulas(
 	# 	horarios_das_aulas=[
@@ -620,25 +990,44 @@ if __name__ == '__main__':
 	# 	mes_final='11',
 	# 	dia_final='13')
 
-	BD.atribuir_aulas(
-		horarios_das_aulas=[
-		[1,1,1,1,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0],
-		],
-		professor='Professor do Teste1',
-		turma='TESTE0001',
+	# BD.atribuir_aulas(
+	# 	horarios_das_aulas=[
+	# 	[1,1,1,1,0,0,0,0,0,0,0,0],
+	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
+	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
+	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
+	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
+	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
+	# 	],
+	# 	professor='Professor do Teste1',
+	# 	turma='TESTE0001',
 
-		ano_inicio='2016',
-		mes_inicio='06',
-		dia_inicio='01',
+	# 	ano_inicio='2016',
+	# 	mes_inicio='06',
+	# 	dia_inicio='01',
 
-		ano_final='2017',
-		mes_final='11',
-		dia_final='13',
-		id_coord = 1)
+	# 	ano_final='2017',
+	# 	mes_final='11',
+	# 	dia_final='13',
+	# 	id_coord = 1)
+
+	# BD.desatribuir_todas_aulas(
+	# 	horarios_das_aulas=[
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	[1,1,1,1,1,1,1,1,1,1,1,1],
+	# 	],
+	# 	turma='Turma1',
+	# 	ano_inicio='2016',
+	# 	mes_inicio='01',
+	# 	dia_inicio='01',
+
+	# 	ano_final='2016',
+	# 	mes_final='12',
+	# 	dia_final='31',
+	# 	id_coord = 1)
 
 	BD.close()
