@@ -7,13 +7,14 @@ from Control import *
 class Visao(Frame):
 	def __init__(self, master = None):
 		Frame.__init__(self, master)
+		self.ID_Coordenador = ''
 		self.master = master
 		self.master.Bd = Banco()
+		self.start_login()
 		#self.start_menu()
-		#self.start_login()
 		#self.homepage()
 		#self.disciplina()
-		self.admin_home()
+		#self.admin_home()
 
 	def homepage(self):
 		self.master.resizable(False,False)
@@ -68,6 +69,7 @@ class Visao(Frame):
 
 	def verifica_login(self):
 		if self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == True:
+			self.ID_Coordenador = self.master.Bd.id_coordenador(usuario = self.user.get())
 			self.homepage()
 		elif self.master.Bd.verifica_login(self.user.get(), self.senha.get()) == False:
 			self.master.title("Senha ou Login incorretos tente novamente")
@@ -92,12 +94,6 @@ class Visao(Frame):
 		img = Label(self.Admin_Home, image=render)
 		img.image = render
 		img.grid(row=0, column=0, columnspan=2)
-		# Label(self.Administrador, text='TODAS AS OPERAÇÕES ABAIXO SERÃO EXECUTADAS NO COORDENADOR SELECIONADO').grid(row=0, column=0, columnspan=4)
-		# Label(self.Administrador, text='Coordenador: ').grid(row=1, column=0)
-		# Button(self.Administrador, text='Alterar Nome Para').grid(row=2, column=0)
-		# self.NomeNovo = StringVar()
-		# Entry(self.Administrador, textvariable= self.NomeNovo).grid(row=2, column=1)
-		# Button(self.Administrador, text='Resetar Senha').grid(row=3,column=0)
 
 	def admin_refresh(self):
 		for widget in self.master.winfo_children():
@@ -202,7 +198,7 @@ class Visao(Frame):
 				hora+=1
 			dia+=1
 			hora=0
-		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(lista_de_checkbox=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get())).grid(row=18, column=0, columnspan=100, sticky= 'WE')
+		Button(self.GerenciadorCalendario, text='Marcar Aulas', command= lambda: self.master.Bd.atribuir_aulas(horarios_das_aulas=self.semana_em_inteiros(), professor=self.Professor.get(), turma= self.Turma.get(), ano_inicio= self.anoInicial.get(), mes_inicio=self.mesInicial.get(), dia_inicio=self.diaInicial.get(), ano_final=self.anoFinal.get(), mes_final=self.mesFinal.get(), dia_final=self.diaFinal.get(), id_coord = self.ID_Coordenador)).grid(row=18, column=0, columnspan=100, sticky= 'WE')
 		Button(self.GerenciadorCalendario, text='Apagar Aulas').grid(row=19, column=0, columnspan=100, sticky= 'WE')
 		
 	def semana_em_inteiros(self):
@@ -250,36 +246,37 @@ class Visao(Frame):
 		self.meses.grid(row=linha+1, column=coluna, columnspan=7)
 		
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 1)
-		self.mes(frame=Janeiro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes = '01', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Janeiro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes = '01',ano = ano, tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 2)
-		self.mes(frame=Fevereiro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='02', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Fevereiro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='02',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 3)
-		self.mes(frame=Março, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='03', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Março, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='03',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 4)
-		self.mes(frame=Abril, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='04', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Abril, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='04',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 5)
-		self.mes(frame=Maio, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='05', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Maio, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='05',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 6)
-		self.mes(frame=Junho, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='06', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Junho, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='06',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 7)
-		self.mes(frame=Julho, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='07', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Julho, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='07',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 8)
-		self.mes(frame=Agosto, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='08', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Agosto, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='08',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 9)
-		self.mes(frame=Setembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='09', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Setembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='09',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 10)
-		self.mes(frame=Outubro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='10', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Outubro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='10',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 11)
-		self.mes(frame=Novembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='11', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Novembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='11',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 		totaldias, dia_inicial = self.master.Bd.parametros_mes(ano = ano, mes = 12)
-		self.mes(frame=Dezembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='12', tipo=tipo, professor_turma=professor_ou_turma)
+		self.mes(frame=Dezembro, dias=totaldias, dia_da_semana_inicial=dia_inicial,numero_do_mes ='12',ano = ano,  tipo=tipo, professor_turma=professor_ou_turma)
 
 	def refresh(self):
 		for widget in self.master.winfo_children():
 			widget.destroy()
 		self.start_menu()
 
-	def mes(self, frame = 'frame Pai', nome_do_mês = 'sem nome',ano = '2016', dias = 30, dia_da_semana_inicial = 0, numero_do_mes = '06', tipo='', professor_turma=''):
+	def mes(self, frame, ano, dias, dia_da_semana_inicial, numero_do_mes, tipo, professor_turma):
+		id_coord = self.ID_Coordenador
 		diaAtual = dia_da_semana_inicial+1
 		dia = 1
 		self.Turnos = Notebook(frame)
@@ -303,7 +300,6 @@ class Visao(Frame):
 		turnoooooooooo = ['turno1','turno2','turno3']
 
 		for turno in Lista_Turnos:
-			#Button(frame, text='♪┏ ( ･o･) ┛♪┗ (･o･ ) ┓♪').grid(row=0, column=0, columnspan=8, sticky='WE')
 			Label(turno, text='Segunda').grid(row=1, column=2)
 			Label(turno, text='Terça').grid(row=1, column=3)
 			Label(turno, text='Quarta').grid(row=1, column=4)
@@ -311,7 +307,7 @@ class Visao(Frame):
 			Label(turno, text='Sexta').grid(row=1, column=6)
 			Label(turno, text='Sábado').grid(row=1, column=7)
 			Label(turno, text='Domingo').grid(row=1, column=1)
-			#print('asdadad')
+			
 			if dia_da_semana_inicial < 5: linha_maxima = 26
 			else: linha_maxima = 30
 
@@ -327,10 +323,10 @@ class Visao(Frame):
 							diaa = dia
 							if diaa < 10: diaa = '0'+str(diaa)
 							Button(turno, text='Dia: %i'%dia).grid(row=linha, column=coluna, sticky='NSWE')
-							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][0], tipo=tipo, professor_turma= professor_turma)).grid(row=linha+1, column=coluna, sticky='NSWE')
-							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][1], tipo=tipo, professor_turma= professor_turma)).grid(row=linha+2, column=coluna, sticky='NSWE')
-							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][2], tipo=tipo, professor_turma= professor_turma)).grid(row=linha+3, column=coluna, sticky='NSWE')
-							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][3], tipo=tipo, professor_turma= professor_turma)).grid(row=linha+4, column=coluna, sticky='NSWE')
+							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][0], tipo=tipo, professor_turma= professor_turma, id_coord = id_coord)).grid(row=linha+1, column=coluna, sticky='NSWE')
+							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][1], tipo=tipo, professor_turma= professor_turma, id_coord = id_coord)).grid(row=linha+2, column=coluna, sticky='NSWE')
+							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][2], tipo=tipo, professor_turma= professor_turma, id_coord = id_coord)).grid(row=linha+3, column=coluna, sticky='NSWE')
+							Button(turno, text=self.master.Bd.pesquisa_cronograma(ano = ano, mes = numero_do_mes, dia = diaa, horario = lista_de_horarios[ele_in_horario][3], tipo=tipo, professor_turma= professor_turma, id_coord = id_coord)).grid(row=linha+4, column=coluna, sticky='NSWE')
 							dia += 1
 					diaAtual = 1
 			diaAtual = dia_da_semana_inicial+1

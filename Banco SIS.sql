@@ -12,7 +12,7 @@ insert into turno values('Noturno');
 CREATE TABLE Disciplina (
     nome VARCHAR(40) PRIMARY KEY
 );
-
+select * from Disciplina;
 insert into Disciplina values('Disciplina de Teste');
 
 CREATE TABLE Professor (
@@ -27,7 +27,8 @@ CREATE TABLE Professor (
         REFERENCES Disciplina (nome_disc)
 );
 INSERT INTO Professor(matricula, nome_prof, disciplina, carga_horaria, quantidade_dias, detalhe) SELECT * FROM (SELECT 21312 ,'asdad','Disciplina de Teste', 20, 5) AS x WHERE NOT EXISTS (SELECT * FROM Professor WHERE  matricula = 21312 AND nome_prof = 'asdad' AND disciplina = 'Disciplina de Teste') LIMIT 1;
-
+SELECT * FROM Coordenador ORDER BY id;
+select * from turma;
 SELECT 
     *
 FROM
@@ -84,13 +85,17 @@ insert into Turma values('TEC50415','Matutino');
 SELECT nome_turma, turno FROM Turma ORDER BY nome_turma;
 
 CREATE TABLE Coordenador (
-    id_coor INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(40),
     login VARCHAR(30),
     senha VARCHAR(30)
 );
-insert into Coordenador(nome, login, senha) values('Nome de teste', 'teste', '123');
-SELECT nome FROM Coordenador ORDER BY nome;
+
+use SIS;
+drop database SIS;
+insert into Coordenador(nome, login, senha) values('coordenador', 'teste', '123');
+SELECT * FROM Coordenador ORDER BY id;
+
 
 
 CREATE TABLE Cronograma (
@@ -131,3 +136,5 @@ use sis;
 INSERT INTO  Cronograma (id_professor, data_reserva, horario, turma) SELECT * FROM (SELECT 1, '20160606', '07:30 - 08:30', 'TEC50419') AS x WHERE NOT EXISTS (SELECT * FROM Cronograma WHERE id_professor = 1 AND data_reserva = '20160606'AND horario = '07:30 - 08:30' AND turma = 'TEC50419') LIMIT 1;
 select * from Cronograma;
 select * from turno;
+
+INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT * FROM (SELECT 1, '20160606', '07:30 - 08:30', 'TESTE0001', 1) AS x WHERE NOT EXISTS (SELECT * FROM Cronograma	WHERE id_professor = 1 AND data_reserva = '20160606' AND horario = '07:30 - 08:30' AND turma = 'TESTE0001' AND id_coordenador = 1) LIMIT 1;

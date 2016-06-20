@@ -15,7 +15,7 @@ class Banco():
 	    		turno VARCHAR(30) PRIMARY KEY
 	    	);
 	    	CREATE TABLE IF NOT EXISTS Disciplina (
-	    	    nome_disc VARCHAR(40) PRIMARY KEY
+	    	    nome VARCHAR(40) PRIMARY KEY
 	    	);
 	    	CREATE TABLE IF NOT EXISTS Professor (
 		        id_prof INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,7 +25,7 @@ class Banco():
 		        carga_horaria INT,
 		        quantidade_dias INT,
 		        FOREIGN KEY (disciplina)
-		            REFERENCES Disciplina (nome_disc)
+		            REFERENCES Disciplina (nome)
 		    );
 	    	CREATE TABLE IF NOT EXISTS Horario (
 	    	    horario VARCHAR(13) PRIMARY KEY,
@@ -40,7 +40,7 @@ class Banco():
 	    	        REFERENCES Turno (turno)
 	    	);
 	    	CREATE TABLE IF NOT EXISTS Coordenador (
-	    	    id_coor INT AUTO_INCREMENT PRIMARY KEY,
+	    	    id INT AUTO_INCREMENT PRIMARY KEY,
 	    	    nome VARCHAR(40),
 	    	    login VARCHAR(30),
 	    	    senha VARCHAR(30)
@@ -58,20 +58,20 @@ class Banco():
 	    	    FOREIGN KEY (turma)
 	    	        REFERENCES Turma (nome_turma),
 	    	    FOREIGN KEY (id_coordenador)
-	    	        REFERENCES Coordenador (id_coor)
+	    	        REFERENCES Coordenador (id)
 	    	);
 	    	''')
 	    turnos = ['Matutino', 'Vespertino', 'Noturno', 'Matutino/Vespertino', 'Matutino/Noturno','Vespertino/Noturno']
 	    for ele in turnos:
-	    	self.c.execute("INSERT INTO Turno SELECT * FROM (SELECT '%s') AS x WHERE NOT EXISTS (SELECT * FROM Turno WHERE turno = '%s') LIMIT 1;"%(ele, ele))
+	    	self.c.execute("INSERT INTO Turno SELECT '%s' AS x WHERE NOT EXISTS (SELECT * FROM Turno WHERE turno = '%s') LIMIT 1;"%(ele, ele))
 	    horarios = [
 	    '07:30 - 08:30', '08:30 - 09:30', '09:30 - 10:30', '10:30 - 11:30',
 	    '13:00 - 14:00', '14:00 - 15:00', '15:00 - 16:00', '16:00 - 17:00',
 	    '18:00 - 19:00', '19:00 - 20:00', '20:00 - 21:00', '21:00 - 22:00']
 	    for ind in range(0, 4):
-	    	self.c.execute("INSERT INTO Horario SELECT * FROM (SELECT '%s', '%s') AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind], turnos[0], horarios[ind]))
-	    	self.c.execute("INSERT INTO Horario SELECT * FROM (SELECT '%s', '%s') AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+4], turnos[1], horarios[ind+4]))
-	    	self.c.execute("INSERT INTO Horario SELECT * FROM (SELECT '%s', '%s') AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+8], turnos[2], horarios[ind+8]))
+	    	self.c.execute("INSERT INTO Horario SELECT '%s', '%s' AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind], turnos[0], horarios[ind]))
+	    	self.c.execute("INSERT INTO Horario SELECT '%s', '%s' AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+4], turnos[1], horarios[ind+4]))
+	    	self.c.execute("INSERT INTO Horario SELECT '%s', '%s' AS x WHERE NOT EXISTS (SELECT * FROM Horario WHERE horario = '%s') LIMIT 1;"%(horarios[ind+8], turnos[2], horarios[ind+8]))
 
 
 	def primeiro_dia_do_mes(self, mes, ano = '2016', dia = '1'):
@@ -103,7 +103,7 @@ class Banco():
 		turmas = self.c.fetchall()
 		return turmas
 	def adicionar_turma(self, nome_turma, turno):
-		self.c.execute("INSERT INTO Turma(nome_turma, turno) SELECT * FROM (SELECT '%s','%s') AS x WHERE NOT EXISTS (SELECT * FROM Turma WHERE nome_turma = '%s' AND turno = '%s') LIMIT 1;"%(nome_turma, turno, nome_turma, turno))
+		self.c.execute("INSERT INTO Turma(nome_turma, turno) SELECT '%s','%s' AS x WHERE NOT EXISTS (SELECT * FROM Turma WHERE nome_turma = '%s' AND turno = '%s') LIMIT 1;"%(nome_turma, turno, nome_turma, turno))
 	def remover_turma(self, nome_turma, turno):
 		self.c.execute("DELETE FROM Turma WHERE nome_turma = '%s' AND turno = '%s';"%(nome_turma, turno))
 	def lista_de_turnos(self):
@@ -114,7 +114,7 @@ class Banco():
 			lista_turnos.append(ele[0])
 		return lista_turnos
 	def adicionar_disciplina(self, nome_disciplina):
-		self.c.execute("INSERT INTO Disciplina(nome) SELECT * FROM (SELECT '%s') AS x WHERE NOT EXISTS (SELECT * FROM Disciplina WHERE nome = '%s') LIMIT 1;"%(nome_disciplina, nome_disciplina))
+		self.c.execute("INSERT INTO Disciplina(nome) SELECT '%s' AS x WHERE NOT EXISTS (SELECT * FROM Disciplina WHERE nome = '%s') LIMIT 1;"%(nome_disciplina, nome_disciplina))
 	def remover_disciplina(self, nome_disciplina):
 		self.c.execute("DELETE FROM Discilpina WHERE nome = '%s';"%(nome_disciplina))
 	def lista_disciplinas(self):
@@ -125,8 +125,10 @@ class Banco():
 		return lista_de_disciplinas
 	
 	def adicionar_coordenador(self, nome, login):
-		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT * FROM (SELECT '%s', '%s', '123456') AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' AND senha = '%s'"%(nome, login, nome, login))
-
+		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT '%s', '%s', '123456' AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' AND senha = '%s'"%(nome, login, nome, login))
+	def id_coordenador(self, usuario):
+		self.c.execute("SELECT id FROM Coordenador WHERE login = '%s';"%usuario)
+		return self.c.fetchone()[0]
 	def remover_coordenador(self, nome):
 		self.c.execute("DELETE FROM Coordenador WHERE nome = '%s';"%(nome))
 	def resetar_senha_coordenador(self, nome):
@@ -150,7 +152,7 @@ class Banco():
 			else:
 				return False
 	def adicionar_professor(self, matricula, nome_prof, disciplina, carga_horaria):
-		self.c.execute("INSERT INTO Professor(matricula, nome_prof, disciplina, carga_horaria, quantidade_dias) SELECT * FROM (SELECT %i ,'%s','%s', %i, %i) AS x WHERE NOT EXISTS (SELECT * FROM Professor WHERE  matricula = %i AND nome_prof = '%s' AND disciplina = '%s') LIMIT 1;"%(matricula, nome_prof, disciplina, carga_horaria, carga_horaria/4, matricula, nome_prof, disciplina))
+		self.c.execute("INSERT INTO Professor(matricula, nome_prof, disciplina, carga_horaria, quantidade_dias) SELECT %i ,'%s','%s', %i, %i AS x WHERE NOT EXISTS (SELECT * FROM Professor WHERE  matricula = %i AND nome_prof = '%s' AND disciplina = '%s') LIMIT 1;"%(matricula, nome_prof, disciplina, carga_horaria, carga_horaria/4, matricula, nome_prof, disciplina))
 	def remover_professor(self, nome_prof, disciplina):
 		self.c.execute("DELETE FROM Professor WHERE  nome_prof = '%s' AND disciplina = '%s';"%(nome_prof, disciplina))
 	def nomes_professores(self):
@@ -158,14 +160,7 @@ class Banco():
 		professores = []
 		for ele in self.c.fetchall():
 			professores.append(ele[0])
-		return professores
-
-	def adicionar_disciplina(self, disciplina):
-		self.c.execute("INSERT INTO Disciplina(nome_disc) SELECT * FROM (SELECT '%s') AS x WHERE NOT EXISTS (SELECT * FROM Disciplina WHERE nome_disc = '%s') LIMIT 1;"%(disciplina))
-	
-	def remover_disciplina(self, disciplina):
-		self.c.execute("DELETE FROM Disciplina WHERE nome_disc = '%s';"%(disciplina))
-	
+		return professores	
 	def nomes_turmas(self):
 		self.c.execute("SELECT nome_turma FROM Turma;")
 		turmas = []
@@ -173,28 +168,25 @@ class Banco():
 			turmas.append(ele[0])
 		return turmas
 
-	def adicionar_no_cronograma(self, professor, data_reserva, horario, turma):
-		self.c.execute("INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)values(%i, '20160806', '07:30 - 08:30', 'TEC50419', 1);"%(id_professor, data_reserva, horario, turma, id_coordenador))
-
-	def pesquisa_cronograma(self, ano, mes, dia, horario, tipo='', professor_turma=''):
+	def pesquisa_cronograma(self, ano, mes, dia, horario, tipo, professor_turma, id_coord):
 		if tipo == 'Professor':
 			self.c.execute("SELECT id_prof FROM Professor where nome_prof = '%s';"%professor_turma)
 			id_professor = self.c.fetchone()[0]
-			self.c.execute("select turma from Cronograma where data_reserva = '%s%s%s' and horario = '%s' and id_professor = '%i';"%(str(ano), mes, str(dia), horario, id_professor))
+			self.c.execute("select turma from Cronograma where data_reserva = '%s%s%s' and horario = '%s' and id_professor = '%i' AND id_coordenador = %i;"%(str(ano), mes, str(dia), horario, id_professor, id_coord))
 			turma = self.c.fetchone()
 			if turma == None:
 				return horario
 			else:
 				return turma[0]
 		elif tipo == 'Turma':
-			self.c.execute("select id_professor from Cronograma where data_reserva = '%s%s%s' and horario = '%s' and turma = '%s';"%(str(ano), mes, str(dia), horario, professor_turma))
+			self.c.execute("select id_professor from Cronograma where data_reserva = '%s%s%s' and horario = '%s' and turma = '%s' AND id_coordenador = %i;"%(str(ano), mes, str(dia), horario, professor_turma, id_coord))
 			id_professor = self.c.fetchone()
 			if id_professor == None:
 				return horario
 			else:
 				self.c.execute("SELECT nome_prof FROM Professor where id_prof = %i;"%id_professor[0])
 				return  self.c.fetchone()[0]
-			
+
 	def horarios(self):
 		self.c.execute("select horario from Horario order by(horario)")
 		lista_de_horarios = []
@@ -202,7 +194,7 @@ class Banco():
 			lista_de_horarios.append(h[0])
 		return lista_de_horarios
 
-	def atribuir_aulas(self, lista_de_checkbox, professor, turma, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final):
+	def atribuir_aulas(self, horarios_das_aulas, professor, turma, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final, id_coord):
 		executar = True
 		
 		if int(ano_final) < int(ano_inicio):
@@ -224,10 +216,10 @@ class Banco():
 			for ele in resultado:
 				horarios.append(ele[0])
 			
-			lista_de_checkbox.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
+			horarios_das_aulas.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
 
 			dias_da_semana = []
-			for dia in lista_de_checkbox:
+			for dia in horarios_das_aulas:
 				if 1 in dia:
 					dias_da_semana.append(True)
 				else:
@@ -258,32 +250,32 @@ class Banco():
 								dia_da_semana = self.c.fetchone()[0]
 								if dia_da_semana != None and dia_da_semana <= 7:
 									if dias_da_semana[dia_da_semana-1]:
-										for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-											if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+										for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+											if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 												if dia < 10 and mes <10:
 													self.c.execute('''
-														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s0%s', '%s', '%s') AS x 
+														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s0%s', '%s', '%s', %i AS x 
 														WHERE NOT EXISTS (SELECT * FROM Cronograma
-														WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												elif mes < 10:
 													self.c.execute('''
-														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s%s', '%s', '%s') AS x 
+														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s%s', '%s', '%s', %i AS x 
 														WHERE NOT EXISTS (SELECT * FROM Cronograma
-														WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												elif dia < 10:
 													self.c.execute('''
-														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s0%s', '%s', '%s') AS x 
+														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s0%s', '%s', '%s', %i AS x 
 														WHERE NOT EXISTS (SELECT * FROM Cronograma
-														WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												else:
 													self.c.execute('''
-														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s%s', '%s', '%s') AS x 
+														INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s%s', '%s', '%s', %i AS x 
 														WHERE NOT EXISTS (SELECT * FROM Cronograma
-														WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 				elif ano == int(ano_inicio):
 					
 					for mes in range(int(mes_inicio), 13):
@@ -304,33 +296,38 @@ class Banco():
 							if dia_da_semana != None and dia_da_semana <= 7:
 								
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
 										
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+												self.c.execute('''
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s0%s', '%s', '%s', %i AS x 
+													WHERE NOT EXISTS (SELECT * FROM Cronograma
+													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))										
+													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))										
 				elif ano >int(ano_inicio) and ano < int(ano_final):
 					
 					for mes in range(1, 13):
@@ -350,32 +347,32 @@ class Banco():
 							dia_da_semana = self.c.fetchone()[0]
 							if dia_da_semana != None and dia_da_semana <= 7:
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))						
+													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))						
 				else:
 					
 					for mes in range(1, int(mes_final)+1):
@@ -391,33 +388,33 @@ class Banco():
 							dia_da_semana = self.c.fetchone()[0]
 							if dia_da_semana != None and dia_da_semana <= 7:
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s0%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s0%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s0%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s0%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													WHERE (id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma)SELECT * FROM (SELECT %i, '%s%s%s', '%s', '%s') AS x 
+													INSERT INTO Cronograma(id_professor, data_reserva, horario, turma, id_coordenador)SELECT %i, '%s%s%s', '%s', '%s', %i AS x 
 													WHERE NOT EXISTS (SELECT * FROM Cronograma
-													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s')) LIMIT 1;
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
-	def desatribuir_aulas(self, lista_de_checkbox, professor, turma, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final):
+													WHERE (id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i)) LIMIT 1;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord, id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
+	def desatribuir_aulas(self, horarios_das_aulas, professor, turma, ano_inicio, mes_inicio, dia_inicio, ano_final, mes_final, dia_final, id_coord):
 		executar = True		
 		if int(ano_final) < int(ano_inicio):
 			executar = False
@@ -437,10 +434,10 @@ class Banco():
 			for ele in resultado:
 				horarios.append(ele[0])
 			
-			lista_de_checkbox.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
+			horarios_das_aulas.insert(0,[0,0,0,0,0,0,0,0,0,0,0,0])
 
 			dias_da_semana = []
-			for dia in lista_de_checkbox:
+			for dia in horarios_das_aulas:
 				if 1 in dia:
 					dias_da_semana.append(True)
 				else:
@@ -468,24 +465,24 @@ class Banco():
 								dia_da_semana = self.c.fetchone()[0]
 								if dia_da_semana != None and dia_da_semana <= 7:
 									if dias_da_semana[dia_da_semana-1]:
-										for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-											if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+										for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+											if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 												if dia < 10 and mes <10:
 													self.c.execute('''
-														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s';
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												elif mes < 10:
 													self.c.execute('''
-														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s';
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												elif dia < 10:
 													self.c.execute('''
-														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s';
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 												else:
 													self.c.execute('''
-														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s';
-														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+														DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+														'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 
 				elif ano == int(ano_inicio):
 					for mes in range(int(mes_inicio), 13):
@@ -505,25 +502,25 @@ class Banco():
 							dia_da_semana = self.c.fetchone()[0]
 							if dia_da_semana != None and dia_da_semana <= 7:
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
 										
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											
 										
 				elif ano >int(ano_inicio) and ano < int(ano_final):
@@ -545,24 +542,24 @@ class Banco():
 							dia_da_semana = self.c.fetchone()[0]
 							if dia_da_semana != None and dia_da_semana <= 7:
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 				else:
 					for mes in range(1, int(mes_final)+1):
 						for dia in range(1, int(dia_final)+1):
@@ -577,34 +574,34 @@ class Banco():
 							dia_da_semana = self.c.fetchone()[0]
 							if dia_da_semana != None and dia_da_semana <= 7:
 								if dias_da_semana[dia_da_semana-1]:
-									for ele in range(0, len(lista_de_checkbox[dia_da_semana-1])+1):
-										if lista_de_checkbox[dia_da_semana-1][ele-1] == 1:
+									for ele in range(0, len(horarios_das_aulas[dia_da_semana-1])+1):
+										if horarios_das_aulas[dia_da_semana-1][ele-1] == 1:
 											if dia < 10 and mes <10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif mes < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s0%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											elif dia < 10:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s0%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 											else:
 												self.c.execute('''
-													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s';
-													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma))
+													DELETE FROM Cronograma WHERE id_professor = %i AND data_reserva = '%s%s%s' AND horario = '%s' AND turma = '%s' AND id_coordenador = %i;
+													'''%(id_professor, str(ano), str(mes), str(dia), horarios[ele-1], turma, id_coord))
 
 	def close(self):
 		self.banco.close()
 
 if __name__ == '__main__':
 	BD = Banco()
-	print(BD.lista_de_turmas())
+	#print(BD.id_coordenador(nome = 'coordenador'))
 	#remover_professor(self, nome_prof, disciplina):
 	# BD.desatribuir_aulas(
-	# 	lista_de_checkbox=[
+	# 	horarios_das_aulas=[
 	# 	[1,1,1,1,0,0,0,0,0,0,0,0],
 	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
 	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
@@ -623,24 +620,25 @@ if __name__ == '__main__':
 	# 	mes_final='11',
 	# 	dia_final='13')
 
-	# BD.atribuir_aulas(
-	# 	lista_de_checkbox=[
-	# 	[1,1,1,1,0,0,0,0,0,0,0,0],
-	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
-	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
-	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
-	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
-	# 	[0,0,0,0,0,0,0,0,0,0,0,0],
-	# 	],
-	# 	professor='Rasta de Shambalá 1',
-	# 	turma='TEC50419',
+	BD.atribuir_aulas(
+		horarios_das_aulas=[
+		[1,1,1,1,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0],
+		],
+		professor='Professor do Teste1',
+		turma='TESTE0001',
 
-	# 	ano_inicio='2016',
-	# 	mes_inicio='06',
-	# 	dia_inicio='01',
+		ano_inicio='2016',
+		mes_inicio='06',
+		dia_inicio='01',
 
-	# 	ano_final='2017',
-	# 	mes_final='11',
-	# 	dia_final='13')
+		ano_final='2017',
+		mes_final='11',
+		dia_final='13',
+		id_coord = 1)
 
 	BD.close()
