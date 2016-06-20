@@ -125,7 +125,7 @@ class Banco():
 		return lista_de_disciplinas
 	
 	def adicionar_coordenador(self, nome, login):
-		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT '%s', '%s', '123456' AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' AND senha = '%s'"%(nome, login, nome, login))
+		self.c.execute("INSERT INTO Coordenador(nome, login, senha) SELECT '%s', '%s', '123456' AS x WHERE NOT EXISTS (SELECT * FROM Coordenador WHERE nome = '%s' AND senha = '%s') LIMIT 1;"%(nome, login, nome, login))
 	def id_coordenador(self, usuario):
 		self.c.execute("SELECT id FROM Coordenador WHERE login = '%s';"%usuario)
 		return self.c.fetchone()[0]

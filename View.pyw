@@ -312,7 +312,6 @@ class Visao(Frame):
 			else: linha_maxima = 30
 
 			for linha in range(2, linha_maxima, 5):
-				print(lista_de_horarios[ele_in_horario])
 				if diaAtual <= dias:
 					Label(turno, text=lista_de_horarios[ele_in_horario][0]).grid(row=linha+1, column=0, sticky='NSWE')
 					Label(turno, text=lista_de_horarios[ele_in_horario][1]).grid(row=linha+2, column=0, sticky='NSWE')
